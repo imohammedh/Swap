@@ -41,6 +41,22 @@ export default defineSchema({
     .index("by_user_listing", ["userId", "listingId"])
     .index("by_user", ["userId"]),
 
+  offers: defineTable({
+    listingId: v.id("listings"),
+    buyerId: v.id("users"),
+    sellerId: v.id("users"),
+    amountEgp: v.number(),
+    message: v.optional(v.string()),
+    status: v.union(
+      v.literal("pending"),
+      v.literal("accepted"),
+      v.literal("rejected"),
+    ),
+  })
+    .index("by_seller", ["sellerId"])
+    .index("by_buyer", ["buyerId"])
+    .index("by_listing", ["listingId"]),
+
   notifications: defineTable({
     userId: v.id("users"),
     actorId: v.optional(v.id("users")),

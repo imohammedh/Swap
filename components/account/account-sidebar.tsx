@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useQuery } from "convex/react";
 import {
   BadgeDollarSign,
   Book,
@@ -12,6 +13,7 @@ import {
   Ticket,
 } from "lucide-react";
 
+import { api } from "@/convex/_generated/api";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -24,16 +26,32 @@ const navItems = [
   { href: "/account/settings", label: "Settings", icon: Settings },
 ];
 
+function initials(name: string | null | undefined) {
+  if (!name) return "U";
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "U";
+  return parts
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? "")
+    .join("");
+}
+
 export default function AccountSidebar() {
   const pathname = usePathname();
+  const me = useQuery(api.users.me, {});
 
   return (
     <aside className="space-y-4 rounded-xl border bg-card p-4">
       <div className="flex flex-col items-center gap-2 border-b pb-4 text-center">
-        <div className="grid h-20 w-20 place-items-center rounded-full bg-primary/10 text-2xl font-bold text-primary">
-          MH
+        <div className="grid h-20 w-20 place-items-center overflow-hidden rounded-full bg-primary/10 text-2xl font-bold text-primary">
+          {me?.image ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={me.image} alt={me.name ?? "Profile"} className="h-full w-full object-cover" />
+          ) : (
+            initials(me?.name)
+          )}
         </div>
-        <p className="text-lg font-bold">Mohammed Hamed</p>
+        <p className="text-lg font-bold">{me?.name ?? "Your account"}</p>
         <p className="flex items-center gap-1 text-xs text-muted-foreground">
           <BadgeDollarSign size={14} /> 0.0 | 0 Ratings
         </p>
