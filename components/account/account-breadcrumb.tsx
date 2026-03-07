@@ -11,16 +11,24 @@ const routeLabels: Record<string, string> = {
   favorites: "Favorites",
   blog: "Blog",
   settings: "Settings",
+  products: "Products",
 };
 
-export default function AccountBreadcrumb() {
+const nonNavigableCrumbs = new Set(["products"]);
+
+type AccountBreadcrumbProps = {
+  tailLabel?: string;
+};
+
+export default function AccountBreadcrumb({ tailLabel }: AccountBreadcrumbProps) {
   const pathname = usePathname();
   const segments = pathname.split("/").filter(Boolean);
 
   const crumbs = segments.map((segment, index) => {
     const href = `/${segments.slice(0, index + 1).join("/")}`;
-    const label = routeLabels[segment] ?? segment;
-    return { href, label };
+    const baseLabel = routeLabels[segment] ?? decodeURIComponent(segment);
+    const label = tailLabel && index === segments.length - 1 ? tailLabel : baseLabel;
+    return { href, label, segment };
   });
 
   return (
@@ -30,15 +38,17 @@ export default function AccountBreadcrumb() {
       </Link>
       {crumbs.map((crumb, index) => {
         const isLast = index === crumbs.length - 1;
+        const isNavigable = !isLast && !nonNavigableCrumbs.has(crumb.segment);
+
         return (
           <span key={crumb.href} className="inline-flex items-center gap-2">
             <span>/</span>
-            {isLast ? (
-              <span className="font-semibold text-foreground">{crumb.label}</span>
-            ) : (
+            {isNavigable ? (
               <Link href={crumb.href} className="hover:underline">
                 {crumb.label}
               </Link>
+            ) : (
+              <span className="font-semibold text-foreground">{crumb.label}</span>
             )}
           </span>
         );

@@ -4,6 +4,7 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import { Megaphone, Pencil, Wallet } from "lucide-react";
 import { useMutation, useQuery } from "convex/react";
 import { useRouter } from "next/navigation";
+import type { Id } from "@/convex/_generated/dataModel";
 
 import { api } from "@/convex/_generated/api";
 import { Button } from "@/components/ui/button";
@@ -24,10 +25,11 @@ export default function AccountPage() {
   const router = useRouter();
   const me = useQuery(api.users.me, {});
   const updateProfile = useMutation(api.users.updateProfile);
+  const generateUploadUrl = useMutation(api.files.generateUploadUrl);
 
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
-  const [image, setImage] = useState("");
+  const [imageFile, setImageFile] = useState<File | null>(null);
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -37,24 +39,41 @@ export default function AccountPage() {
     if (!me) return;
     setName(me.name ?? "");
     setPhone(me.phone ?? "");
-    setImage(me.image ?? "");
+    setImageFile(null);
   }, [me]);
 
   const initials = useMemo(() => getInitials(name || me?.name), [name, me?.name]);
+
+  const uploadProfileImage = async (): Promise<Id<"_storage"> | undefined> => {
+    if (!imageFile) return undefined;
+
+    const postUrl = await generateUploadUrl({});
+    const result = await fetch(postUrl, {
+      method: "POST",
+      headers: { "Content-Type": imageFile.type || "application/octet-stream" },
+      body: imageFile,
+    });
+    const body = (await result.json()) as { storageId: Id<"_storage"> };
+    return body.storageId;
+  };
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
     setSaving(true);
     setError(null);
+    setSuccess(null);
 
     try {
+      const imageStorageId = await uploadProfileImage();
       await updateProfile({
-        name,
+        name: name || undefined,
         phone: phone || undefined,
-        image: image || undefined,
+        imageStorageId,
       });
+
       setSuccess("Profile updated.");
       setEditing(false);
+      setImageFile(null);
     } catch (submissionError) {
       setError(
         submissionError instanceof Error
@@ -90,15 +109,15 @@ export default function AccountPage() {
       <Card>
         <CardContent className="space-y-4 p-6 text-center">
           <div className="mx-auto grid h-24 w-24 place-items-center overflow-hidden rounded-full bg-primary/10 text-3xl font-bold text-primary">
-            {image ? (
+            {me.image ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={image} alt={name || "Profile"} className="h-full w-full object-cover" />
+              <img src={me.image} alt={name || "Profile"} className="h-full w-full object-cover" />
             ) : (
               initials
             )}
           </div>
           <div>
-            <h1 className="text-2xl font-bold">{name || "Unnamed user"}</h1>
+            <h1 className="text-2xl font-bold">{name || me.name || "Swap User"}</h1>
             <p className="text-sm text-muted-foreground">{me.email}</p>
             <p className="text-sm text-muted-foreground">{phone || "No phone set"}</p>
             <p className="text-sm text-muted-foreground">0.0 | 0 Ratings</p>
@@ -109,7 +128,16 @@ export default function AccountPage() {
               <>
                 <Input value={name} onChange={(event) => setName(event.target.value)} placeholder="Full name" />
                 <Input value={phone} onChange={(event) => setPhone(event.target.value)} placeholder="Phone" />
-                <Input value={image} onChange={(event) => setImage(event.target.value)} placeholder="Profile image URL" />
+                <div className="space-y-1">
+                  <label className="text-sm font-medium">Profile image</label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(event) => setImageFile(event.target.files?.[0] ?? null)}
+                    className="block w-full rounded-md border bg-background p-2 text-sm"
+                  />
+                  {imageFile && <p className="text-xs text-muted-foreground">Selected: {imageFile.name}</p>}
+                </div>
               </>
             )}
 
@@ -130,7 +158,7 @@ export default function AccountPage() {
                       setEditing(false);
                       setName(me.name ?? "");
                       setPhone(me.phone ?? "");
-                      setImage(me.image ?? "");
+                      setImageFile(null);
                     }}
                   >
                     Cancel
