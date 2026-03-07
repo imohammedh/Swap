@@ -24,22 +24,27 @@ export const me = query({
 
 export const updateProfile = mutation({
   args: {
-    name: v.string(),
+    name: v.optional(v.string()),
     phone: v.optional(v.string()),
-    image: v.optional(v.string()),
+    imageStorageId: v.optional(v.id("_storage")),
   },
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) throw new Error("Please sign in first.");
 
-    const name = args.name.trim();
-    if (!name) throw new Error("Name is required.");
+    const current = await ctx.db.get(userId);
+    if (!current) throw new Error("User not found.");
 
+    const preferredName = args.name?.trim() || current.name?.trim() || current.email?.split("@")[0]?.trim() || "Swap User";
     const phone = args.phone?.trim() || undefined;
-    const image = args.image?.trim() || undefined;
+
+    let image = current.image ?? undefined;
+    if (args.imageStorageId) {
+      image = (await ctx.storage.getUrl(args.imageStorageId)) ?? image;
+    }
 
     await ctx.db.patch(userId, {
-      name,
+      name: preferredName,
       phone,
       image,
     });

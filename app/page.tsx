@@ -3,17 +3,18 @@
 import Image from "next/image";
 import Link from "next/link";
 import dynamic from "next/dynamic";
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { useConvexAuth } from "convex/react";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Bell, Heart, LogOut, Search, Upload, User, X } from "lucide-react";
+import { Baby, Bell, Book, Building2, Car, ChevronLeft, ChevronRight, Heart, Laptop, LogOut, Menu, MessageSquare, PawPrint, Search, Settings, Shapes, Shirt, ShoppingBag, Smartphone, Sofa, Ticket, Upload, User, X } from "lucide-react";
 
 import { api } from "@/convex/_generated/api";
 import AppFooter from "@/components/app-footer";
 import MaxWidth from "@/components/max-width";
 import { Badge } from "@/components/ui/badge";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -27,6 +28,36 @@ function formatEgp(value: number) {
   return `${new Intl.NumberFormat("en-US").format(value)} EGP`;
 }
 
+const categoryIcons = {
+  all: Shapes,
+  vehicles: Car,
+  "real-estate": Building2,
+  mobiles: Smartphone,
+  electronics: Laptop,
+  furniture: Sofa,
+  fashion: Shirt,
+  pets: PawPrint,
+  kids: Baby,
+} as const;
+const mobileMenuItems = [
+  { href: "/account/offers", label: "Offers", icon: Ticket },
+  { href: "/account/messages", label: "Messages", icon: MessageSquare },
+  { href: "/account/my-listings", label: "My Listings", icon: ShoppingBag },
+  { href: "/account/favorites", label: "Favorites", icon: Heart },
+  { href: "/account/blog", label: "Blog", icon: Book },
+  { href: "/account/settings", label: "Settings", icon: Settings },
+];
+
+function initials(name: string | null | undefined) {
+  if (!name) return "U";
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "U";
+  return parts
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? "")
+    .join("");
+}
+
 export default function Home() {
   const [searchTerm, setSearchTerm] = useState("");
   const [activeCategory, setActiveCategory] = useState("all");
@@ -37,6 +68,7 @@ export default function Home() {
   const [isSwiping, setIsSwiping] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const [unreadOnly, setUnreadOnly] = useState(false);
+  const categoryScrollerRef = useRef<HTMLDivElement | null>(null);
 
   const { isAuthenticated } = useConvexAuth();
   const { signOut } = useAuthActions();
@@ -129,6 +161,15 @@ export default function Home() {
       await handleSwipe("dislike");
     }
   };
+  const scrollCategories = (direction: "left" | "right") => {
+    const node = categoryScrollerRef.current;
+    if (!node) return;
+    const amount = Math.max(220, Math.round(node.clientWidth * 0.6));
+    node.scrollBy({
+      left: direction === "left" ? -amount : amount,
+      behavior: "smooth",
+    });
+  };
 
   return (
     <main className=" flex flex-col min-h-screen bg-background text-foreground">
@@ -170,7 +211,7 @@ export default function Home() {
             {isAuthenticated && (
               <Button
                 variant="outline"
-                className="h-11 rounded-full"
+                className="hidden h-11 rounded-full md:inline-flex"
                 onClick={() => router.push("/account")}
               >
                 <User size={16} /> Account
@@ -192,7 +233,7 @@ export default function Home() {
             {isAuthenticated ? (
               <Button
                 variant="outline"
-                className="h-11 rounded-full"
+                className="hidden h-11 rounded-full md:inline-flex"
                 onClick={() => {
                   void signOut().then(() => router.push("/signin"));
                 }}
@@ -202,12 +243,80 @@ export default function Home() {
             ) : (
               <Button
                 variant="outline"
-                className="h-11 rounded-full"
+                className="hidden h-11 rounded-full md:inline-flex"
                 onClick={() => router.push("/signin")}
               >
                 <User size={16} /> Sign in
               </Button>
             )}
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-10 w-10 rounded-full md:hidden"
+                >
+                  <Menu size={18} />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                align="end"
+                sideOffset={10}
+                className="z-[120] w-72 rounded-xl border border-border/80 bg-card p-2 shadow-2xl"
+              >
+                <DropdownMenuLabel className="rounded-lg bg-muted/30 p-3">
+                  <div className="flex items-center gap-3">
+                    <div className="grid h-12 w-12 place-items-center overflow-hidden rounded-full bg-primary/10 text-sm font-bold text-primary">
+                      {me?.image ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={me.image} alt={me.name ?? "Profile"} className="h-full w-full object-cover" />
+                      ) : (
+                        initials(me?.name)
+                      )}
+                    </div>
+                    <div>
+                      <p className="font-semibold">{me?.name ?? "Your account"}</p>
+                      <p className="text-xs text-muted-foreground">0.0 | 0 Ratings</p>
+                    </div>
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuItem
+                  className="mt-2 rounded-md bg-muted/40 font-medium"
+                  onClick={() => router.push("/account")}
+                >
+                  <User size={16} /> Manage Account
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                {mobileMenuItems.map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <DropdownMenuItem
+                      key={item.href}
+                      className="rounded-md"
+                      onClick={() => router.push(item.href)}
+                    >
+                      <Icon size={16} /> {item.label}
+                    </DropdownMenuItem>
+                  );
+                })}
+                <DropdownMenuSeparator />
+                {isAuthenticated ? (
+                  <DropdownMenuItem
+                    className="rounded-md"
+                    onClick={() => {
+                      void signOut().then(() => router.push("/signin"));
+                    }}
+                  >
+                    <LogOut size={16} /> Sign out
+                  </DropdownMenuItem>
+                ) : (
+                  <DropdownMenuItem className="rounded-md" onClick={() => router.push("/signin")}>
+                    <User size={16} /> Sign in
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
 
           {notifOpen && (
@@ -410,21 +519,63 @@ export default function Home() {
         {currentView === "browse" && (
           <>
             <section className="rounded-xl border bg-card p-3 shadow-sm md:p-4">
-              <div className="flex gap-2 overflow-x-auto pb-1">
-                {categoryOptions.map((category) => (
-                  <button
-                    key={category.id}
-                    type="button"
-                    onClick={() => setActiveCategory(category.id)}
-                    className={`flex shrink-0 items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition ${
-                      activeCategory === category.id
-                        ? "border-primary bg-primary text-primary-foreground"
-                        : "border-input bg-background text-foreground"
-                    }`}
-                  >
-                    <span>{category.name}</span>
-                  </button>
-                ))}
+              <div className="flex items-center gap-2">
+                <button type="button" onClick={() => scrollCategories("left")} className="grid h-8 w-8 shrink-0 place-items-center rounded-full border bg-background text-muted-foreground">
+                  <ChevronLeft size={14} />
+                </button>
+                <div ref={categoryScrollerRef} className="flex flex-1 gap-2 overflow-x-auto pb-1">
+                  {categoryOptions.map((category) => {
+                    const Icon = categoryIcons[category.id as keyof typeof categoryIcons] ?? Shapes;
+                    return (
+                      <button
+                        key={category.id}
+                        type="button"
+                        onClick={() => setActiveCategory(category.id)}
+                        className={`flex shrink-0 items-center gap-2 rounded-full border px-3 py-2 text-sm font-medium transition ${
+                          activeCategory === category.id
+                            ? "border-primary bg-primary/10 text-foreground"
+                            : "border-input bg-background text-foreground"
+                        }`}
+                      >
+                        <span className="grid h-8 w-8 place-items-center rounded-full bg-muted">
+                          <Icon size={16} />
+                        </span>
+                        <span>{category.name}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+                <button type="button" onClick={() => scrollCategories("left")} className="grid h-8 w-8 shrink-0 place-items-center rounded-full border bg-background text-muted-foreground">
+                  <ChevronRight size={14} />
+                </button>
+              </div>
+            </section>
+
+            <section className="relative overflow-hidden rounded-xl border bg-card">
+              <div className="relative h-44 md:h-64">
+                <Image
+                  src="https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=1600&q=80"
+                  alt="Featured banner"
+                  fill
+                  className="object-cover"
+                  priority
+                />
+                <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/35 to-black/15" />
+                <div className="absolute inset-0 flex items-end justify-between p-4 md:p-6">
+                  <div>
+                    <p className="text-xs uppercase tracking-[0.16em] text-white/80">Featured Deal</p>
+                    <h2 className="mt-1 text-2xl font-black text-white md:text-4xl">Swap Picks This Week</h2>
+                    <p className="mt-2 text-sm text-white/85 md:text-base">Discover top listings and make your best offer.</p>
+                  </div>
+                  <div className="hidden items-center gap-2 md:flex">
+                    <button type="button" className="grid h-9 w-9 place-items-center rounded-full bg-black/45 text-white backdrop-blur">
+                      <ChevronLeft size={16} />
+                    </button>
+                    <button type="button" className="grid h-9 w-9 place-items-center rounded-full bg-black/45 text-white backdrop-blur">
+                      <ChevronRight size={16} />
+                    </button>
+                  </div>
+                </div>
               </div>
             </section>
 
@@ -513,3 +664,19 @@ export default function Home() {
     </main>
   );
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
