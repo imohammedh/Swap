@@ -9,10 +9,14 @@ export default function SignIn() {
   const { signIn } = useAuthActions();
   const [flow, setFlow] = useState<"signIn" | "signUp">("signIn");
   const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loadingPassword, setLoadingPassword] = useState(false);
+  const [loadingGitHub, setLoadingGitHub] = useState(false);
   const router = useRouter();
+
+  const isLoading = loadingPassword || loadingGitHub;
+
   return (
-    <div className="flex flex-col gap-8 w-full max-w-lg mx-auto h-screen justify-center items-center px-4">
+    <div className="flex h-screen w-full max-w-lg flex-col items-center justify-center gap-8 px-4 mx-auto">
       <div className="text-center flex flex-col items-center gap-4">
         <div className="flex items-center gap-6">
           <Image
@@ -38,31 +42,53 @@ export default function SignIn() {
           />
         </div>
         <h1 className="text-3xl font-bold text-slate-800 dark:text-slate-200">
-          Convex + Next.js + Convex Auth
+          Swap Authentication
         </h1>
         <p className="text-slate-600 dark:text-slate-400">
-          This demo uses Convex Auth for authentication, so you will need to
-          sign in or sign up to access the demo.
+          Sign in with GitHub or use email/password.
         </p>
       </div>
       <form
-        className="flex flex-col gap-4 w-full bg-slate-100 dark:bg-slate-800 p-8 rounded-2xl shadow-xl border border-slate-300 dark:border-slate-600"
+        className="flex w-full flex-col gap-4 rounded-2xl border border-slate-300 bg-slate-100 p-8 shadow-xl dark:border-slate-600 dark:bg-slate-800"
         onSubmit={(e) => {
           e.preventDefault();
-          setLoading(true);
+          setLoadingPassword(true);
           setError(null);
           const formData = new FormData(e.target as HTMLFormElement);
           formData.set("flow", flow);
           void signIn("password", formData)
             .catch((error) => {
               setError(error.message);
-              setLoading(false);
+              setLoadingPassword(false);
             })
             .then(() => {
               router.push("/");
             });
         }}
       >
+        <button
+          className="cursor-pointer rounded-lg bg-slate-900 py-3 font-semibold text-white shadow-md transition-all duration-200 hover:scale-[1.02] hover:bg-black hover:shadow-lg active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100"
+          type="button"
+          disabled={isLoading}
+          onClick={() => {
+            setLoadingGitHub(true);
+            setError(null);
+            void signIn("github").catch((error) => {
+              setError(error.message);
+              setLoadingGitHub(false);
+            });
+          }}
+        >
+          {loadingGitHub ? "Redirecting..." : "Continue with GitHub"}
+        </button>
+
+        <div className="relative my-1">
+          <div className="h-px bg-slate-300 dark:bg-slate-600"></div>
+          <span className="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-1/2 rounded-md bg-slate-100 px-2 text-xs text-slate-500 dark:bg-slate-800 dark:text-slate-400">
+            OR
+          </span>
+        </div>
+
         <input
           className="bg-white dark:bg-slate-900 text-foreground rounded-lg p-3 border border-slate-300 dark:border-slate-600 focus:border-slate-500 dark:focus:border-slate-400 focus:ring-2 focus:ring-slate-200 dark:focus:ring-slate-700 outline-none transition-all placeholder:text-slate-400"
           type="email"
@@ -88,9 +114,13 @@ export default function SignIn() {
         <button
           className="bg-slate-700 hover:bg-slate-800 dark:bg-slate-600 dark:hover:bg-slate-500 text-white font-semibold rounded-lg py-3 shadow-md hover:shadow-lg transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
           type="submit"
-          disabled={loading}
+          disabled={isLoading}
         >
-          {loading ? "Loading..." : flow === "signIn" ? "Sign in" : "Sign up"}
+          {loadingPassword
+            ? "Loading..."
+            : flow === "signIn"
+              ? "Sign in"
+              : "Sign up"}
         </button>
         <div className="flex flex-row gap-2 text-sm justify-center">
           <span className="text-slate-600 dark:text-slate-400">
