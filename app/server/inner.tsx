@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { Preloaded, useMutation, usePreloadedQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
@@ -6,29 +6,30 @@ import { api } from "../../convex/_generated/api";
 export default function Home({
   preloaded,
 }: {
-  preloaded: Preloaded<typeof api.myFunctions.listNumbers>;
+  preloaded: Preloaded<typeof api.myFunctions.myStats>;
 }) {
   const data = usePreloadedQuery(preloaded);
-  const addNumber = useMutation(api.myFunctions.addNumber);
+  const clearMyNotifications = useMutation(api.myFunctions.clearMyNotifications);
+
   return (
     <>
-      <div className="flex flex-col gap-4 bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-600 p-6 rounded-xl shadow-md">
+      <div className="flex flex-col gap-4 rounded-xl border border-slate-300 bg-slate-100 p-6 shadow-md dark:border-slate-600 dark:bg-slate-800">
         <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200">
           Reactive client-loaded data
         </h2>
-        <code className="bg-white dark:bg-slate-900 p-4 rounded-lg border border-slate-300 dark:border-slate-600 overflow-x-auto">
+        <code className="overflow-x-auto rounded-lg border border-slate-300 bg-white p-4 dark:border-slate-600 dark:bg-slate-900">
           <pre className="text-sm text-slate-700 dark:text-slate-300">
             {JSON.stringify(data, null, 2)}
           </pre>
         </code>
       </div>
       <button
-        className="bg-slate-700 hover:bg-slate-800 dark:bg-slate-600 dark:hover:bg-slate-500 text-white px-6 py-3 rounded-lg mx-auto cursor-pointer transition-all duration-200 shadow-md hover:shadow-lg font-medium"
+        className="mx-auto cursor-pointer rounded-lg bg-slate-700 px-6 py-3 font-medium text-white shadow-md transition-all duration-200 hover:bg-slate-800 hover:shadow-lg dark:bg-slate-600 dark:hover:bg-slate-500"
         onClick={() => {
-          void addNumber({ value: Math.floor(Math.random() * 10) });
+          void clearMyNotifications({});
         }}
       >
-        Add a random number
+        Clear my notifications
       </button>
     </>
   );
