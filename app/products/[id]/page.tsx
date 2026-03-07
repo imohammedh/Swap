@@ -7,6 +7,7 @@ import { use, useState } from "react";
 import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import {
   ArrowLeft,
+  Check,
   Heart,
   MessageCircle,
   ShieldAlert,
@@ -37,8 +38,16 @@ export default function ProductDetailsPage({
 
   const listing = useQuery(api.listings.getBySlug, { slug: id });
   const swipe = useMutation(api.listings.swipe);
+  const createOffer = useMutation(api.offers.create);
   const startConversation = useMutation(api.messages.startConversation);
+
   const [actionError, setActionError] = useState<string | null>(null);
+  const [offerOpen, setOfferOpen] = useState(false);
+  const [offerSuccessOpen, setOfferSuccessOpen] = useState(false);
+  const [submittingOffer, setSubmittingOffer] = useState(false);
+  const [sendingFollowup, setSendingFollowup] = useState(false);
+  const [offerAmount, setOfferAmount] = useState("");
+  const [offerMessage, setOfferMessage] = useState("");
 
   if (listing === undefined) {
     return (
@@ -51,6 +60,17 @@ export default function ProductDetailsPage({
   if (listing === null) {
     notFound();
   }
+
+  const openOfferModal = () => {
+    if (!isAuthenticated) {
+      router.push("/signin");
+      return;
+    }
+
+    setActionError(null);
+    setOfferAmount(String(Math.max(1, Math.round(listing.priceEgp))));
+    setOfferOpen(true);
+  };
 
   const handleMessageSeller = async () => {
     if (!isAuthenticated) {
@@ -66,6 +86,60 @@ export default function ProductDetailsPage({
       setActionError(
         error instanceof Error ? error.message : "Failed to open chat.",
       );
+    }
+  };
+
+  const handleSubmitOffer = async () => {
+    const amountEgp = Number(offerAmount);
+    if (!Number.isFinite(amountEgp) || amountEgp <= 0) {
+      setActionError("Please enter a valid offer amount.");
+      return;
+    }
+
+    setSubmittingOffer(true);
+    setActionError(null);
+
+    try {
+      await createOffer({
+        listingId: listing._id,
+        amountEgp,
+      });
+
+      await swipe({ listingId: listing._id, direction: "like" });
+
+      setOfferOpen(false);
+      setOfferSuccessOpen(true);
+    } catch (error) {
+      setActionError(
+        error instanceof Error ? error.message : "Failed to send offer.",
+      );
+    } finally {
+      setSubmittingOffer(false);
+    }
+  };
+
+  const handleSendMessageAfterOffer = async () => {
+    if (!isAuthenticated) {
+      router.push("/signin");
+      return;
+    }
+
+    setSendingFollowup(true);
+    setActionError(null);
+
+    try {
+      const result = await startConversation({
+        listingId: listing._id,
+        message: offerMessage.trim() || undefined,
+      });
+      setOfferSuccessOpen(false);
+      router.push(`/account/messages?conversation=${result.conversationId}`);
+    } catch (error) {
+      setActionError(
+        error instanceof Error ? error.message : "Failed to send message.",
+      );
+    } finally {
+      setSendingFollowup(false);
     }
   };
 
@@ -131,11 +205,7 @@ export default function ProductDetailsPage({
                   </p>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
-                  <Button
-                    onClick={() =>
-                      void swipe({ listingId: listing._id, direction: "like" })
-                    }
-                  >
+                  <Button onClick={openOfferModal}>
                     <Heart size={14} /> Make an offer
                   </Button>
                   <Button
@@ -225,6 +295,94 @@ export default function ProductDetailsPage({
           </CardContent>
         </Card>
       </MaxWidth>
+
+      {offerOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 p-4">
+          <div className="w-full max-w-md rounded-xl border bg-card p-4 shadow-2xl">
+            <div className="mb-3 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setOfferOpen(false)}
+                className="text-muted-foreground hover:text-foreground"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="rounded-lg border bg-muted/30 p-3">
+              <div className="flex items-center gap-3">
+                <span className="text-2xl">??</span>
+                <input
+                  type="number"
+                  value={offerAmount}
+                  onChange={(event) => setOfferAmount(event.target.value)}
+                  className="h-11 flex-1 bg-transparent text-3xl font-semibold outline-none"
+                />
+                <span className="text-sm font-medium text-muted-foreground">EGP</span>
+              </div>
+            </div>
+
+            <div className="mt-5 flex items-end justify-between gap-3">
+              <p className="text-sm">
+                <span className="text-muted-foreground">Offer Value</span>
+                <br />
+                <span className="font-bold">{offerAmount || 0} EGP</span>
+              </p>
+              <Button onClick={() => void handleSubmitOffer()} disabled={submittingOffer}>
+                {submittingOffer ? "Submitting..." : "Submit offer"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {offerSuccessOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 p-4">
+          <div className="relative w-full max-w-md rounded-xl border bg-card px-6 pb-6 pt-10 text-center shadow-2xl">
+            <div className="absolute -top-12 left-1/2 grid h-24 w-24 -translate-x-1/2 place-items-center rounded-full border-4 border-card bg-amber-400 text-white shadow-lg">
+              <Check size={36} />
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setOfferSuccessOpen(false)}
+              className="absolute right-4 top-4 text-muted-foreground hover:text-foreground"
+            >
+              <X size={20} />
+            </button>
+
+            <p className="mb-5 mt-8 text-lg font-medium">
+              Your offer has been submitted successfully!
+            </p>
+
+            <textarea
+              value={offerMessage}
+              onChange={(event) => setOfferMessage(event.target.value)}
+              rows={4}
+              className="mb-4 w-full rounded-xl border bg-background p-3 text-sm"
+              placeholder="Send the seller a message and speed up the process"
+            />
+
+            <div className="space-y-2">
+              <Button
+                className="h-12 w-full"
+                onClick={() => void handleSendMessageAfterOffer()}
+                disabled={sendingFollowup}
+              >
+                {sendingFollowup ? "Sending..." : "Send Message"}
+              </Button>
+              <Button
+                className="h-12 w-full"
+                variant="secondary"
+                onClick={() => setOfferSuccessOpen(false)}
+              >
+                Continue Browsing
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <AppFooter />
     </main>
   );
