@@ -31,7 +31,9 @@ export default function ListingOnboardingPage() {
   const [summary, setSummary] = useState("");
   const [description, setDescription] = useState("");
   const [imageUrlsText, setImageUrlsText] = useState("");
-  const [paymentType, setPaymentType] = useState<"cash" | "swap" | "both">("both");
+  const [paymentType, setPaymentType] = useState<"cash" | "swap" | "both">(
+    "both",
+  );
   const [condition, setCondition] = useState<"new" | "used">("used");
   const [files, setFiles] = useState<File[]>([]);
 
@@ -109,7 +111,9 @@ export default function ListingOnboardingPage() {
         router.push(`/products/${created.slug}`);
       }, 700);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to create listing.");
+      setError(
+        err instanceof Error ? err.message : "Failed to create listing.",
+      );
     }
   };
 
@@ -150,8 +154,8 @@ export default function ListingOnboardingPage() {
   };
 
   return (
-    <main className="min-h-screen bg-background text-foreground">
-      <MaxWidth className="max-w-3xl space-y-4 py-4 md:py-6">
+    <main className="min-h-screen flex flex-col bg-background text-foreground">
+      <MaxWidth className="max-w-3xl space-y-4 flex-1 py-4 md:py-6">
         <Card>
           <CardHeader>
             <CardTitle>Create Listing Onboarding</CardTitle>
@@ -174,7 +178,9 @@ export default function ListingOnboardingPage() {
 
             {step === 0 && (
               <div className="space-y-3">
-                <p className="text-sm text-muted-foreground">Choose your listing category.</p>
+                <p className="text-sm text-muted-foreground">
+                  Choose your listing category.
+                </p>
                 <div className="grid gap-2 sm:grid-cols-2">
                   {categoryOptions
                     .filter((category) => category.id !== "all")
@@ -184,7 +190,9 @@ export default function ListingOnboardingPage() {
                         type="button"
                         onClick={() => setCategoryId(category.id)}
                         className={`flex items-center gap-2 rounded-lg border p-3 text-left ${
-                          categoryId === category.id ? "border-primary bg-primary/10" : "bg-card"
+                          categoryId === category.id
+                            ? "border-primary bg-primary/10"
+                            : "bg-card"
                         }`}
                       >
                         <span>{category.name}</span>
@@ -210,7 +218,9 @@ export default function ListingOnboardingPage() {
                 <div className="grid grid-cols-2 gap-2">
                   <select
                     value={paymentType}
-                    onChange={(e) => setPaymentType(e.target.value as "cash" | "swap" | "both")}
+                    onChange={(e) =>
+                      setPaymentType(e.target.value as "cash" | "swap" | "both")
+                    }
                     className="h-10 rounded-md border bg-background px-3 text-sm"
                   >
                     <option value="both">Swap or Cash</option>
@@ -219,7 +229,9 @@ export default function ListingOnboardingPage() {
                   </select>
                   <select
                     value={condition}
-                    onChange={(e) => setCondition(e.target.value as "new" | "used")}
+                    onChange={(e) =>
+                      setCondition(e.target.value as "new" | "used")
+                    }
                     className="h-10 rounded-md border bg-background px-3 text-sm"
                   >
                     <option value="new">New</option>
@@ -254,7 +266,9 @@ export default function ListingOnboardingPage() {
                 />
 
                 <div className="space-y-2 rounded-md border p-3">
-                  <label className="text-sm font-medium">Upload up to 5 images</label>
+                  <label className="text-sm font-medium">
+                    Upload up to 5 images
+                  </label>
                   <input
                     type="file"
                     multiple
@@ -262,11 +276,16 @@ export default function ListingOnboardingPage() {
                     onChange={handleFileChange}
                     className="block w-full rounded-md border bg-background p-2 text-sm"
                   />
-                  <p className="text-xs text-muted-foreground">{files.length}/5 selected</p>
+                  <p className="text-xs text-muted-foreground">
+                    {files.length}/5 selected
+                  </p>
                   {files.length > 0 && (
                     <div className="space-y-2">
                       {files.map((file, index) => (
-                        <div key={`${file.name}-${index}`} className="flex items-center justify-between rounded border px-2 py-1 text-xs">
+                        <div
+                          key={`${file.name}-${index}`}
+                          className="flex items-center justify-between rounded border px-2 py-1 text-xs"
+                        >
                           <span className="truncate">{file.name}</span>
                           <button
                             type="button"
@@ -282,7 +301,9 @@ export default function ListingOnboardingPage() {
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-sm font-medium">Image URLs (optional, comma or new line)</label>
+                  <label className="text-sm font-medium">
+                    Image URLs (optional, comma or new line)
+                  </label>
                   <textarea
                     value={imageUrlsText}
                     onChange={(event) => setImageUrlsText(event.target.value)}
@@ -296,16 +317,38 @@ export default function ListingOnboardingPage() {
 
             {step === 3 && (
               <div className="space-y-2 rounded-lg border bg-muted/20 p-4 text-sm">
-                <p><strong>Category:</strong> {categoryOptions.find((c) => c.id === categoryId)?.name}</p>
-                <p><strong>Title:</strong> {title}</p>
-                <p><strong>Price:</strong> {parsedPrice} EGP</p>
-                <p><strong>Location:</strong> {location}</p>
-                <p><strong>Payment:</strong> {paymentType}</p>
-                <p><strong>Condition:</strong> {condition}</p>
-                <p><strong>Summary:</strong> {summary}</p>
-                <p><strong>Description:</strong> {description}</p>
-                <p><strong>Uploaded Images:</strong> {files.length}</p>
-                <p><strong>Image URLs:</strong> {imageUrlsText.trim() || "Not provided"}</p>
+                <p>
+                  <strong>Category:</strong>{" "}
+                  {categoryOptions.find((c) => c.id === categoryId)?.name}
+                </p>
+                <p>
+                  <strong>Title:</strong> {title}
+                </p>
+                <p>
+                  <strong>Price:</strong> {parsedPrice} EGP
+                </p>
+                <p>
+                  <strong>Location:</strong> {location}
+                </p>
+                <p>
+                  <strong>Payment:</strong> {paymentType}
+                </p>
+                <p>
+                  <strong>Condition:</strong> {condition}
+                </p>
+                <p>
+                  <strong>Summary:</strong> {summary}
+                </p>
+                <p>
+                  <strong>Description:</strong> {description}
+                </p>
+                <p>
+                  <strong>Uploaded Images:</strong> {files.length}
+                </p>
+                <p>
+                  <strong>Image URLs:</strong>{" "}
+                  {imageUrlsText.trim() || "Not provided"}
+                </p>
               </div>
             )}
 
@@ -314,7 +357,9 @@ export default function ListingOnboardingPage() {
             {submitted && (
               <div className="rounded-lg border bg-primary/10 p-6 text-center">
                 <p className="text-xl font-bold">Listing created</p>
-                <p className="mt-2 text-sm text-muted-foreground">Redirecting to listing page...</p>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  Redirecting to listing page...
+                </p>
               </div>
             )}
 
@@ -330,14 +375,19 @@ export default function ListingOnboardingPage() {
               {step < steps.length - 1 && (
                 <Button
                   disabled={!canContinue || submitted || uploading}
-                  onClick={() => setStep((value) => Math.min(value + 1, steps.length - 1))}
+                  onClick={() =>
+                    setStep((value) => Math.min(value + 1, steps.length - 1))
+                  }
                 >
                   Continue
                 </Button>
               )}
 
               {step === steps.length - 1 && (
-                <Button disabled={submitted || uploading} onClick={() => void handleCreate()}>
+                <Button
+                  disabled={submitted || uploading}
+                  onClick={() => void handleCreate()}
+                >
                   {uploading ? "Uploading..." : "Publish Listing"}
                 </Button>
               )}
@@ -349,4 +399,3 @@ export default function ListingOnboardingPage() {
     </main>
   );
 }
-
