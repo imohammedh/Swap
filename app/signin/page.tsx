@@ -5,7 +5,17 @@ import { useAuthActions } from "@convex-dev/auth/react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Chrome, Github, KeyRound, Mail, ShieldCheck, Eye, EyeOff } from "lucide-react";
+import {
+  Chrome,
+  Github,
+  KeyRound,
+  Mail,
+  ShieldCheck,
+  Eye,
+  EyeOff,
+  User,
+} from "lucide-react";
+import { z } from "zod";
 
 import MaxWidth from "@/components/max-width";
 import { Button } from "@/components/ui/button";
@@ -15,6 +25,124 @@ import SwapLogo from "@/public/favicon.svg";
 
 const heroImage =
   "https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?auto=format&fit=crop&w=1400&q=80";
+
+// ─── Zod Schemas ────────────────────────────────────────────────────────────
+
+const emailSchema = z
+  .string()
+  .min(1, "Email is required")
+  .email("Please enter a valid email address")
+  .max(254, "Email is too long");
+
+const passwordSchema = z
+  .string()
+  .min(1, "Password is required")
+  .min(8, "Password must be at least 8 characters")
+  .max(128, "Password is too long")
+  .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
+  .regex(/[a-z]/, "Password must contain at least one lowercase letter")
+  .regex(/[0-9]/, "Password must contain at least one number");
+
+const nameSchema = z
+  .string()
+  .min(1, "First name is required")
+  .min(2, "First name must be at least 2 characters")
+  .max(50, "First name is too long")
+  .regex(
+    /^[a-zA-Z\s'-]+$/,
+    "First name can only contain letters, spaces, hyphens, and apostrophes",
+  );
+
+const signUpSchema = z.object({
+  name: nameSchema,
+  email: emailSchema,
+  password: passwordSchema,
+});
+
+const signInSchema = z.object({
+  email: emailSchema,
+  password: z.string().min(1, "Password is required"),
+});
+
+const verificationCodeSchema = z.object({
+  code: z
+    .string()
+    .min(1, "Verification code is required")
+    .min(6, "Code must be at least 6 characters")
+    .max(8, "Code is too long")
+    .regex(/^\d+$/, "Code must contain only numbers"),
+});
+
+// ─── Types ───────────────────────────────────────────────────────────────────
+
+type FieldErrors = Partial<Record<string, string>>;
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+function parseZodErrors(error: z.ZodError): FieldErrors {
+  return error.issues.reduce<FieldErrors>((acc, issue) => {
+    const key = issue.path[0] as string;
+    if (!acc[key]) acc[key] = issue.message;
+    return acc;
+  }, {});
+}
+
+function getFriendlyAuthError(
+  message: string,
+  flow?: "signIn" | "signUp",
+): string {
+  const lower = message.toLowerCase();
+
+  // Convex Auth throws "InvalidAccountId" when account doesn't exist on sign in
+  // or when account already exists on sign up
+  if (
+    lower.includes("invalidaccountid") ||
+    lower.includes("invalid account id")
+  )
+    return flow === "signUp"
+      ? "An account with this email already exists. Try signing in instead."
+      : "No account found with this email. Please sign up first.";
+
+  if (
+    lower.includes("invalidpassword") ||
+    lower.includes("invalid password") ||
+    lower.includes("incorrect password")
+  )
+    return "Incorrect password. Please try again.";
+  if (
+    lower.includes("accountalreadyexists") ||
+    lower.includes("already exists") ||
+    lower.includes("already registered") ||
+    lower.includes("email in use")
+  )
+    return "An account with this email already exists. Try signing in instead.";
+  if (
+    lower.includes("invalidcode") ||
+    lower.includes("invalid code") ||
+    lower.includes("incorrect code") ||
+    lower.includes("expired")
+  )
+    return "Invalid or expired verification code. Please try again.";
+  if (
+    lower.includes("too many") ||
+    lower.includes("ratelimit") ||
+    lower.includes("rate limit")
+  )
+    return "Too many attempts. Please wait a few minutes and try again.";
+  if (lower.includes("network") || lower.includes("fetch"))
+    return "Network error. Please check your connection and try again.";
+
+  return "Something went wrong. Please try again.";
+}
+
+// ─── Field Error Component ────────────────────────────────────────────────────
+
+function FieldError({ message }: { message?: string }) {
+  if (!message) return null;
+  return <p className="text-xs text-destructive mt-1">{message}</p>;
+}
+
+// ─── Component ───────────────────────────────────────────────────────────────
 
 export default function SignIn() {
   const { signIn } = useAuthActions();
@@ -34,39 +162,64 @@ export default function SignIn() {
   const [showPassword, setShowPassword] = useState(false);
   const [code, setCode] = useState("");
 
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [loading, setLoading] = useState(false);
   const [loadingGitHub, setLoadingGitHub] = useState(false);
   const [loadingGoogle, setLoadingGoogle] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
 
+  // Clear a single field error when the user starts typing
+  const clearFieldError = (field: string) => {
+    if (fieldErrors[field]) {
+      setFieldErrors((prev) => ({ ...prev, [field]: undefined }));
+    }
+  };
+
   const handlePasswordSubmit = async (event: FormEvent) => {
     event.preventDefault();
-    setLoading(true);
     setError(null);
     setInfo(null);
+    setFieldErrors({});
+
+    // Validate with Zod
+    const schema = flow === "signUp" ? signUpSchema : signInSchema;
+    const parsed = schema.safeParse({ name, email, password });
+
+    if (!parsed.success) {
+      setFieldErrors(parseZodErrors(parsed.error));
+      return;
+    }
+
+    setLoading(true);
 
     try {
-      const result = await signIn("password", {
+      const basePayload: Record<string, string> = {
         flow,
-        email,
-        password,
-      });
+        email: parsed.data.email,
+        password: parsed.data.password,
+      };
+
+      if (flow === "signUp") {
+        basePayload.name = (parsed.data as z.infer<typeof signUpSchema>).name;
+      }
+
+      const result = await signIn("password", basePayload);
 
       if (result.signingIn) {
         router.push(safeNext);
         return;
       }
 
-      setPendingEmail(email);
+      setPendingEmail(parsed.data.email);
       setAwaitingCode(true);
       setInfo("Verification code sent. Check your email inbox.");
     } catch (submissionError) {
-      setError(
+      const message =
         submissionError instanceof Error
           ? submissionError.message
-          : "Authentication failed.",
-      );
+          : "Authentication failed.";
+      setError(getFriendlyAuthError(message, flow));
     } finally {
       setLoading(false);
     }
@@ -74,14 +227,23 @@ export default function SignIn() {
 
   const handleCodeSubmit = async (event: FormEvent) => {
     event.preventDefault();
-    setLoading(true);
     setError(null);
+    setFieldErrors({});
+
+    // Validate code with Zod
+    const parsed = verificationCodeSchema.safeParse({ code });
+    if (!parsed.success) {
+      setFieldErrors(parseZodErrors(parsed.error));
+      return;
+    }
+
+    setLoading(true);
 
     try {
       const result = await signIn("password", {
         flow: "email-verification",
         email: pendingEmail,
-        code,
+        code: parsed.data.code,
       });
 
       if (result.signingIn) {
@@ -89,13 +251,13 @@ export default function SignIn() {
         return;
       }
 
-      setError("Invalid verification code.");
+      setError("Invalid verification code. Please try again.");
     } catch (submissionError) {
-      setError(
+      const message =
         submissionError instanceof Error
           ? submissionError.message
-          : "Verification failed.",
-      );
+          : "Verification failed.";
+      setError(getFriendlyAuthError(message));
     } finally {
       setLoading(false);
     }
@@ -108,11 +270,11 @@ export default function SignIn() {
     try {
       await signIn("github");
     } catch (submissionError) {
-      setError(
+      const message =
         submissionError instanceof Error
           ? submissionError.message
-          : "GitHub sign in failed.",
-      );
+          : "GitHub sign in failed.";
+      setError(getFriendlyAuthError(message));
       setLoadingGitHub(false);
     }
   };
@@ -124,14 +286,22 @@ export default function SignIn() {
     try {
       await signIn("google");
     } catch (submissionError) {
-      setError(
+      const message =
         submissionError instanceof Error
           ? submissionError.message
-          : "Google sign in failed.",
-      );
+          : "Google sign in failed.";
+      setError(getFriendlyAuthError(message));
       setLoadingGoogle(false);
     }
   };
+
+  const switchFlow = () => {
+    setFlow(flow === "signIn" ? "signUp" : "signIn");
+    setError(null);
+    setInfo(null);
+    setFieldErrors({});
+  };
+
   return (
     <main className="min-h-screen bg-background py-4 md:py-8">
       <MaxWidth>
@@ -153,7 +323,7 @@ export default function SignIn() {
                       {flow === "signIn" ? "Welcome back" : "Create account"}
                     </h1>
                     <p className="text-sm text-muted-foreground">
-                      Welcome to swap ready for some swapping ?
+                      Welcome to swap ready for some swapping?
                     </p>
                   </div>
 
@@ -189,19 +359,33 @@ export default function SignIn() {
                   <form
                     onSubmit={(event) => void handlePasswordSubmit(event)}
                     className="space-y-3"
+                    noValidate
                   >
                     {flow === "signUp" && (
                       <div className="space-y-1.5">
                         <label className="text-sm font-medium">
                           First name
                         </label>
-                        <Input
-                          value={name}
-                          onChange={(event) => setName(event.target.value)}
-                          placeholder="Enter your first name"
-                          className="h-11"
-                          required
-                        />
+                        <div className="relative">
+                          <User
+                            size={16}
+                            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                          />
+                          <Input
+                            value={name}
+                            onChange={(e) => {
+                              setName(e.target.value);
+                              clearFieldError("name");
+                            }}
+                            placeholder="Enter your first name"
+                            className={`h-11 pl-9 ${fieldErrors.name ? "border-destructive focus-visible:ring-destructive" : ""}`}
+                            aria-invalid={!!fieldErrors.name}
+                            aria-describedby={
+                              fieldErrors.name ? "name-error" : undefined
+                            }
+                          />
+                        </div>
+                        <FieldError message={fieldErrors.name} />
                       </div>
                     )}
 
@@ -214,13 +398,20 @@ export default function SignIn() {
                         />
                         <Input
                           value={email}
-                          onChange={(event) => setEmail(event.target.value)}
+                          onChange={(e) => {
+                            setEmail(e.target.value);
+                            clearFieldError("email");
+                          }}
                           placeholder="Enter your email"
                           type="email"
-                          className="h-11 pl-9"
-                          required
+                          className={`h-11 pl-9 ${fieldErrors.email ? "border-destructive focus-visible:ring-destructive" : ""}`}
+                          aria-invalid={!!fieldErrors.email}
+                          aria-describedby={
+                            fieldErrors.email ? "email-error" : undefined
+                          }
                         />
                       </div>
+                      <FieldError message={fieldErrors.email} />
                     </div>
 
                     <div className="space-y-1.5">
@@ -232,25 +423,47 @@ export default function SignIn() {
                         />
                         <Input
                           value={password}
-                          onChange={(event) => setPassword(event.target.value)}
-                          placeholder="Create a password"
+                          onChange={(e) => {
+                            setPassword(e.target.value);
+                            clearFieldError("password");
+                          }}
+                          placeholder={
+                            flow === "signUp"
+                              ? "Create a password"
+                              : "Enter your password"
+                          }
                           type={showPassword ? "text" : "password"}
-                          minLength={8}
-                          className="h-11 pl-9 pr-10"
-                          required
+                          className={`h-11 pl-9 pr-10 ${fieldErrors.password ? "border-destructive focus-visible:ring-destructive" : ""}`}
+                          aria-invalid={!!fieldErrors.password}
+                          aria-describedby={
+                            fieldErrors.password ? "password-error" : undefined
+                          }
                         />
                         <button
                           type="button"
-                          onClick={() => setShowPassword((value) => !value)}
+                          onClick={() => setShowPassword((v) => !v)}
                           className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                          aria-label={showPassword ? "Hide password" : "Show password"}
+                          aria-label={
+                            showPassword ? "Hide password" : "Show password"
+                          }
                         >
-                          {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                          {showPassword ? (
+                            <EyeOff size={16} />
+                          ) : (
+                            <Eye size={16} />
+                          )}
                         </button>
                       </div>
-                      <p className="text-xs text-muted-foreground">
-                        Must be at least 8 characters
-                      </p>
+                      {fieldErrors.password ? (
+                        <FieldError message={fieldErrors.password} />
+                      ) : (
+                        flow === "signUp" && (
+                          <p className="text-xs text-muted-foreground">
+                            Min. 8 characters with uppercase, lowercase, and a
+                            number
+                          </p>
+                        )
+                      )}
                     </div>
 
                     <Button
@@ -268,16 +481,12 @@ export default function SignIn() {
 
                   <p className="text-center text-sm text-muted-foreground">
                     {flow === "signIn"
-                      ? "Do not have an account? "
+                      ? "Don't have an account? "
                       : "Already have an account? "}
                     <button
                       type="button"
                       className="font-semibold text-foreground underline underline-offset-4"
-                      onClick={() => {
-                        setFlow(flow === "signIn" ? "signUp" : "signIn");
-                        setError(null);
-                        setInfo(null);
-                      }}
+                      onClick={switchFlow}
                     >
                       {flow === "signIn" ? "Sign up" : "Log in"}
                     </button>
@@ -287,21 +496,38 @@ export default function SignIn() {
                 <form
                   onSubmit={(event) => void handleCodeSubmit(event)}
                   className="space-y-3"
+                  noValidate
                 >
                   <div className="space-y-1">
                     <h1 className="text-3xl font-bold">Verify email</h1>
                     <p className="text-sm text-muted-foreground">
-                      Enter the code sent to {pendingEmail}.
+                      Enter the 6-digit code sent to{" "}
+                      <span className="font-medium text-foreground">
+                        {pendingEmail}
+                      </span>
+                      .
                     </p>
                   </div>
 
-                  <Input
-                    className="h-11"
-                    placeholder="Verification code"
-                    value={code}
-                    onChange={(event) => setCode(event.target.value)}
-                    required
-                  />
+                  <div className="space-y-1.5">
+                    <Input
+                      className={`h-11 tracking-widest text-center text-lg font-mono ${fieldErrors.code ? "border-destructive focus-visible:ring-destructive" : ""}`}
+                      placeholder="000000"
+                      value={code}
+                      onChange={(e) => {
+                        // Only allow digits
+                        const digits = e.target.value
+                          .replace(/\D/g, "")
+                          .slice(0, 8);
+                        setCode(digits);
+                        clearFieldError("code");
+                      }}
+                      inputMode="numeric"
+                      maxLength={8}
+                      aria-invalid={!!fieldErrors.code}
+                    />
+                    <FieldError message={fieldErrors.code} />
+                  </div>
 
                   <Button
                     className="h-11 w-full"
@@ -320,6 +546,7 @@ export default function SignIn() {
                       setCode("");
                       setInfo(null);
                       setError(null);
+                      setFieldErrors({});
                     }}
                   >
                     Back
@@ -368,11 +595,3 @@ export default function SignIn() {
     </main>
   );
 }
-
-
-
-
-
-
-
-
