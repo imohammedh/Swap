@@ -45,7 +45,7 @@ export default function AppBreadcrumb({
   });
 
   return (
-    <nav className="flex flex-wrap items-center gap-2 rounded-b-lg border bg-card px-3 py-2 text-sm text-muted-foreground">
+    <nav className="flex flex-wrap items-center gap-2 border bg-card px-3 py-2 text-sm text-muted-foreground">
       <MaxWidth>
         {showHome && (
           <Link href="/" className="text-primary hover:underline">
