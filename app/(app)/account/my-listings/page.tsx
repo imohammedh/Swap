@@ -83,7 +83,7 @@ export default function MyListingsPage() {
           {listings.map((listing) => (
             <Link key={listing._id} href={`/products/${listing.slug}`}>
               <Card className="overflow-hidden transition hover:shadow-md">
-                <div className="aspect-square overflow-hidden">
+                <div className="relative aspect-square overflow-hidden">
                   <Image
                     src={
                       listing.images?.[0] ||

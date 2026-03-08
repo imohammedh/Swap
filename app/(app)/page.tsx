@@ -258,8 +258,11 @@ export default function Home() {
                         #{swipeIndex + 1}
                       </div>
                       <div
-                        className="relative touch-none select-none"
+                        className="relative touch-none select-none cursor-grab active:cursor-grabbing"
                         onPointerDown={(event) => {
+                          if (event.pointerType === "mouse" && event.button !== 0) return;
+                          event.preventDefault();
+                          event.currentTarget.setPointerCapture(event.pointerId);
                           setDragStartX(event.clientX);
                           setIsSwiping(true);
                         }}
@@ -267,10 +270,16 @@ export default function Home() {
                           if (dragStartX === null) return;
                           setDragX(event.clientX - dragStartX);
                         }}
-                        onPointerUp={() => {
+                        onPointerUp={(event) => {
+                          try {
+                            event.currentTarget.releasePointerCapture(event.pointerId);
+                          } catch {}
                           void handleCardSwipeEnd();
                         }}
-                        onPointerCancel={() => {
+                        onPointerCancel={(event) => {
+                          try {
+                            event.currentTarget.releasePointerCapture(event.pointerId);
+                          } catch {}
                           setDragStartX(null);
                           setIsSwiping(false);
                           setDragX(0);
