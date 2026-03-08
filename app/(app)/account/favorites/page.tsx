@@ -36,7 +36,7 @@ export default function FavoritesPage() {
         <p className="mb-4 text-sm text-muted-foreground">{favorites.length} Listings</p>
 
         {favorites.length === 0 ? (
-          <div className="grid min-h-[420px] place-items-center rounded-lg border bg-muted/20 text-center">
+          <div className="grid min-h-105 place-items-center rounded-lg border bg-muted/20 text-center">
             <div className="space-y-2">
               <p className="text-3xl">❤️</p>
               <p className="text-2xl font-semibold">No Results Found</p>

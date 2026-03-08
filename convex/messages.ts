@@ -4,7 +4,10 @@ import { v } from "convex/values";
 import type { Doc, Id } from "./_generated/dataModel";
 import { mutation, query } from "./_generated/server";
 
-function isParticipant(conversation: Doc<"conversations">, userId: Id<"users">) {
+function isParticipant(
+  conversation: Doc<"conversations">,
+  userId: Id<"users">,
+) {
   return conversation.buyerId === userId || conversation.sellerId === userId;
 }
 
@@ -19,7 +22,8 @@ export const startConversation = mutation({
 
     const listing = await ctx.db.get(args.listingId);
     if (!listing || !listing.isPublished) throw new Error("Listing not found.");
-    if (listing.ownerId === userId) throw new Error("You cannot message your own listing.");
+    if (listing.ownerId === userId)
+      throw new Error("You cannot message your own listing.");
 
     const now = Date.now();
     const initialMessage = args.message?.trim();
@@ -106,10 +110,36 @@ export const listMine = query({
             message.senderId !== userId && !message.readBy.includes(userId),
         ).length;
 
+        const currentUserId = userId;
+        const participants = [
+          {
+            userId: conversation.buyerId,
+            name:
+              conversation.buyerId === currentUserId
+                ? "You"
+                : otherUser?.name || otherUser?.email || "Unknown",
+          },
+          {
+            userId: conversation.sellerId,
+            name:
+              conversation.sellerId === currentUserId
+                ? "You"
+                : otherUser?.name || otherUser?.email || "Unknown",
+          },
+        ];
+
         return {
           ...conversation,
-          listingTitle: listing?.title ?? "Listing",
-          listingSlug: listing?.slug ?? "",
+          listing: listing
+            ? {
+                _id: listing._id,
+                title: listing.title,
+                slug: listing.slug,
+              }
+            : null,
+          participants,
+          currentUserId,
+          messages,
           otherUserName: otherUser?.name ?? otherUser?.email ?? "Unknown user",
           unreadCount,
         };
@@ -209,7 +239,9 @@ export const markConversationRead = mutation({
       )
       .collect();
 
-    const unread = messages.filter((message) => !message.readBy.includes(userId));
+    const unread = messages.filter(
+      (message) => !message.readBy.includes(userId),
+    );
 
     await Promise.all(
       unread.map((message) =>

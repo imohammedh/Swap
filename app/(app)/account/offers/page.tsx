@@ -151,11 +151,11 @@ export default function OffersPage() {
 
           <div className="rounded-lg border bg-muted/20 p-3">
             {loading ? (
-              <div className="grid min-h-[420px] place-items-center text-center">
+              <div className="grid min-h-105 place-items-center text-center">
                 <p className="text-sm text-muted-foreground">Loading offers...</p>
               </div>
             ) : rows.length === 0 ? (
-              <div className="grid min-h-[420px] place-items-center text-center">
+              <div className="grid min-h-105 place-items-center text-center">
                 <div className="space-y-2">
                   <p className="text-xl font-semibold">No Results Found</p>
                 </div>
@@ -217,5 +217,3 @@ export default function OffersPage() {
     </div>
   );
 }
-
-
