@@ -10,6 +10,12 @@ const verificationEmail = Email({
     return Math.floor(100000 + Math.random() * 900000).toString();
   },
   async sendVerificationRequest({ identifier, token }) {
+    if (!process.env.AUTH_RESEND_KEY) {
+      throw new Error("Missing AUTH_RESEND_KEY for Resend email verification.");
+    }
+    if (!process.env.AUTH_EMAIL_FROM) {
+      throw new Error("Missing AUTH_EMAIL_FROM for Resend email verification.");
+    }
     const response = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
@@ -31,22 +37,31 @@ const verificationEmail = Email({
   },
 });
 
-export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
-  providers: [
+const oauthProviders = [];
+
+if (process.env.AUTH_GITHUB_ID && process.env.AUTH_GITHUB_SECRET) {
+  oauthProviders.push(
     GitHub({
       clientId: process.env.AUTH_GITHUB_ID,
       clientSecret: process.env.AUTH_GITHUB_SECRET,
     }),
+  );
+}
+
+if (process.env.AUTH_GOOGLE_ID && process.env.AUTH_GOOGLE_SECRET) {
+  oauthProviders.push(
     Google({
       clientId: process.env.AUTH_GOOGLE_ID,
       clientSecret: process.env.AUTH_GOOGLE_SECRET,
     }),
+  );
+}
+
+export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
+  providers: [
+    ...oauthProviders,
     Password({
       verify: verificationEmail,
     }),
   ],
 });
-
-
-
-
