@@ -22,7 +22,7 @@ const navItems = [
   { href: "/account/messages", label: "Messages", icon: MessageSquare },
   { href: "/account/my-listings", label: "My Listings", icon: ShoppingBag },
   { href: "/account/favorites", label: "Favorites", icon: Heart },
-  { href: "/account/blog", label: "Blog", icon: Book },
+  // { href: "/account/blog", label: "Blog", icon: Book },
   { href: "/account/settings", label: "Settings", icon: Settings },
 ];
 
@@ -46,7 +46,11 @@ export default function AccountSidebar() {
         <div className="grid h-20 w-20 place-items-center overflow-hidden rounded-full bg-primary/10 text-2xl font-bold text-primary">
           {me?.image ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={me.image} alt={me.name ?? "Profile"} className="h-full w-full object-cover" />
+            <img
+              src={me.image}
+              alt={me.name ?? "Profile"}
+              className="h-full w-full object-cover"
+            />
           ) : (
             initials(me?.name)
           )}
