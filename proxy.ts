@@ -1,4 +1,4 @@
-import {
+﻿import {
   convexAuthNextjsMiddleware,
   createRouteMatcher,
   nextjsMiddlewareRedirect,
@@ -18,10 +18,15 @@ export default convexAuthNextjsMiddleware(async (request, { convexAuth }) => {
     return nextjsMiddlewareRedirect(request, "/");
   }
   if (isProtectedRoute(request) && !(await convexAuth.isAuthenticated())) {
-    return nextjsMiddlewareRedirect(request, "/signin");
+        const next = request.nextUrl.pathname + request.nextUrl.search;
+    return nextjsMiddlewareRedirect(
+      request,
+      "/signin?next=" + encodeURIComponent(next),
+    );
   }
 });
 
 export const config = {
   matcher: ["/((?!.*\\..*|_next).*)", "/", "/(api|trpc)(.*)"],
 };
+
