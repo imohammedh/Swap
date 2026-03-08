@@ -24,7 +24,7 @@ export default function SharedLayout({
         <SharedHeader />
         {showBreadcrumb && <AppBreadcrumb tailLabel={breadcrumbTailLabel} />}
       </div>
-      <main className="flex-1 mt-32">
+      <main className="flex-1 mt-24">
         <MaxWidth className={maxWidthClassName}>{children}</MaxWidth>
       </main>
 

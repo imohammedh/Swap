@@ -380,35 +380,33 @@ export default function Home() {
             </div>
           </div>
         </div>
-      </section>
-
-      <section className="rounded-xl border bg-card p-2 shadow-sm">
-        <div className="grid grid-cols-2 gap-2">
-          <button
-            type="button"
-            onClick={() => handleViewChange("swap")}
-            className={`rounded-lg px-4 py-2 text-sm font-semibold transition ${
-              currentView === "swap"
-                ? "bg-primary text-primary-foreground"
-                : "bg-background text-foreground hover:bg-muted"
-            }`}
-          >
-            Swap
-          </button>
-          <button
-            type="button"
-            onClick={() => handleViewChange("browse")}
-            className={`rounded-lg px-4 py-2 text-sm font-semibold transition ${
-              currentView === "browse"
-                ? "bg-primary text-primary-foreground"
-                : "bg-background text-foreground hover:bg-muted"
-            }`}
-          >
-            Browse
-          </button>
+        <div className=" w-full flex justify-center items-center">
+          <div className="max-w-3xl p-4 flex gap-2 items-center flex-1 justify-center text-center">
+            <button
+              type="button"
+              onClick={() => handleViewChange("swap")}
+              className={`rounded-lg flex-1 px-4 py-2 text-sm font-semibold transition ${
+                currentView === "swap"
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-background text-foreground hover:bg-muted"
+              }`}
+            >
+              Swap
+            </button>
+            <button
+              type="button"
+              onClick={() => handleViewChange("browse")}
+              className={`rounded-lg flex-1 px-4 py-2 text-sm font-semibold transition ${
+                currentView === "browse"
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-background text-foreground hover:bg-muted"
+              }`}
+            >
+              Browse
+            </button>
+          </div>
         </div>
       </section>
-
       {currentView === "swap" && (
         <>
           {swipeTarget && (
@@ -692,7 +690,7 @@ export default function Home() {
 
       {currentView === "browse" && (
         <>
-          <section className="rounded-xl border bg-card p-3 shadow-sm md:p-4">
+          <section className="rounded-xl  bg-transparent p-3 md:p-4">
             <div className="flex items-center gap-2">
               {/* Left arrow â€” only when scrollable left */}
               {canScrollLeft && (
@@ -731,14 +729,17 @@ export default function Home() {
                         key={category.id}
                         type="button"
                         onClick={() => setActiveCategory(category.id)}
-                        className={`flex shrink-0 items-center gap-2 rounded-full border px-3 py-2 text-sm font-medium transition ${
+                        className={`flex shrink-0 items-center gap-2 rounded-full border bg-primary-foreground px-3 py-2 text-sm font-medium transition ${
                           activeCategory === category.id
                             ? "border-primary bg-primary/10 text-foreground"
                             : "border-input bg-background text-foreground"
                         }`}
                       >
-                        <span className="grid h-8 w-8 place-items-center rounded-full bg-muted">
-                          <Icon size={16} />
+                        <span className="grid h-8 w-8 place-items-center rounded-full bg-primary">
+                          <Icon
+                            size={16}
+                            className=" text-primary-foreground"
+                          />
                         </span>
                         <span>{category.name}</span>
                       </button>
