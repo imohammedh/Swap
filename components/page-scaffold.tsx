@@ -1,6 +1,5 @@
 import type { ReactNode } from "react";
 
-import AppFooter from "@/components/app-footer";
 import MaxWidth from "@/components/max-width";
 import { cn } from "@/lib/utils";
 
@@ -16,9 +15,15 @@ export default function PageScaffold({
   mainClassName,
 }: PageScaffoldProps) {
   return (
-    <main className={cn("min-h-screen flex flex-col bg-background text-foreground", mainClassName)}>
-      <MaxWidth className={cn("flex-1", maxWidthClassName)}>{children}</MaxWidth>
-      <AppFooter />
+    <main
+      className={cn(
+        "min-h-screen flex flex-col bg-background text-foreground",
+        mainClassName,
+      )}
+    >
+      <MaxWidth className={cn("flex-1", maxWidthClassName)}>
+        {children}
+      </MaxWidth>
     </main>
   );
 }
