@@ -1,8 +1,16 @@
-"use client";
+﻿"use client";
 
 import Image from "next/image";
 import Link from "next/link";
-import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import {
+  FormEvent,
+  ReactNode,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useMutation, useQuery } from "convex/react";
 import { useConvexAuth } from "convex/react";
 import { useAuthActions } from "@convex-dev/auth/react";
@@ -43,6 +51,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { categoryNameById, categoryOptions } from "@/lib/categories";
 import HomePageBanner from "@/public/Swap-HomePageBanner.svg";
+import HomePageBannerFeatured from "@/public/Swap-HomePageBannerFeatured.svg";
 
 function formatEgp(value: number) {
   return `${new Intl.NumberFormat("en-US").format(value)} EGP`;
@@ -60,6 +69,133 @@ const categoryIcons = {
   kids: Baby,
 } as const;
 
+function HorizontalSlider({
+  children,
+  scrollAmount = 720,
+}: {
+  children: ReactNode;
+  scrollAmount?: number;
+}) {
+  const scrollerRef = useRef<HTMLDivElement | null>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  const updateScrollState = useCallback(() => {
+    const node = scrollerRef.current;
+    if (!node) return;
+    const { scrollLeft, scrollWidth, clientWidth } = node;
+    setCanScrollLeft(scrollLeft > 0);
+    setCanScrollRight(scrollLeft + clientWidth < scrollWidth - 1);
+  }, []);
+
+  useEffect(() => {
+    updateScrollState();
+    const node = scrollerRef.current;
+    if (!node) return;
+
+    const onScroll = () => updateScrollState();
+    node.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", updateScrollState);
+
+    const ro = new ResizeObserver(() => updateScrollState());
+    ro.observe(node);
+
+    return () => {
+      node.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", updateScrollState);
+      ro.disconnect();
+    };
+  }, [updateScrollState]);
+
+  const scrollToEdge = (direction: "left" | "right") => {
+    const node = scrollerRef.current;
+    if (!node) return;
+    node.scrollTo({
+      left: direction === "left" ? 0 : node.scrollWidth - node.clientWidth,
+      behavior: "smooth",
+    });
+  };
+
+  const scroll = (direction: "left" | "right") => {
+    const node = scrollerRef.current;
+    if (!node) return;
+
+    const items = Array.from(
+      node.querySelectorAll<HTMLElement>('[data-slider-item="true"]'),
+    );
+    if (items.length === 0) {
+      node.scrollBy({
+        left: direction === "left" ? -scrollAmount : scrollAmount,
+        behavior: "smooth",
+      });
+      return;
+    }
+
+    const current = node.scrollLeft;
+    const tolerance = 8;
+    if (direction === "right") {
+      const target = items.find(
+        (item) => item.offsetLeft > current + tolerance,
+      );
+      if (target) {
+        node.scrollTo({ left: target.offsetLeft, behavior: "smooth" });
+      } else {
+        scrollToEdge("right");
+      }
+      return;
+    }
+
+    for (let i = items.length - 1; i >= 0; i -= 1) {
+      const item = items[i];
+      if (item.offsetLeft < current - tolerance) {
+        node.scrollTo({ left: item.offsetLeft, behavior: "smooth" });
+        return;
+      }
+    }
+    scrollToEdge("left");
+  };
+
+  return (
+    <div className="relative w-full">
+      {canScrollLeft && (
+        <button
+          type="button"
+          onClick={() => scroll("left")}
+          className="absolute left-2 top-1/2 z-20 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full border bg-background/90 text-muted-foreground shadow-sm backdrop-blur"
+        >
+          <ChevronLeft size={16} />
+        </button>
+      )}
+
+      {canScrollRight && (
+        <button
+          type="button"
+          onClick={() => scroll("right")}
+          className="absolute right-2 top-1/2 z-20 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full border bg-background/90 text-muted-foreground shadow-sm backdrop-blur"
+        >
+          <ChevronRight size={16} />
+        </button>
+      )}
+
+      <div className="relative overflow-hidden">
+        {canScrollLeft && (
+          <div className="pointer-events-none absolute left-0 top-0 z-10 h-full w-10 bg-linear-to-r from-background to-transparent" />
+        )}
+        {canScrollRight && (
+          <div className="pointer-events-none absolute right-0 top-0 z-10 h-full w-10 bg-linear-to-l from-background to-transparent" />
+        )}
+
+        <div
+          ref={scrollerRef}
+          className="flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-px-1 px-1 pb-1 [&::-webkit-scrollbar]:hidden"
+          style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+        >
+          {children}
+        </div>
+      </div>
+    </div>
+  );
+}
 export default function Home() {
   const [searchTerm, setSearchTerm] = useState("");
   const [activeCategory, setActiveCategory] = useState("all");
@@ -107,25 +243,19 @@ export default function Home() {
       categoryId: activeCategory,
     }) ?? [];
 
+  const swipeDeck =
+    useQuery(api.listings.listForDeck, {
+      search: searchTerm || undefined,
+      categoryId: activeCategory,
+      limit: 50,
+    }) ?? [];
+
   const me = useQuery(api.users.me, {});
   const swipe = useMutation(api.listings.swipe);
 
   const featured = listings.slice(0, 4);
-  const swipeDeck = [...listings].sort((a, b) => {
-    if (!me?.id) return 0;
-    const aMine = a.ownerId === me.id ? 1 : 0;
-    const bMine = b.ownerId === me.id ? 1 : 0;
-    return aMine - bMine;
-  });
-  const swipeTarget = swipeDeck[swipeIndex % Math.max(swipeDeck.length, 1)];
 
-  const handleCreateListing = () => {
-    if (!isAuthenticated) {
-      setAuthPrompt("Sign in to create a listing.");
-      return;
-    }
-    router.push("/onboarding/listing");
-  };
+  const swipeTarget = swipeDeck[swipeIndex % Math.max(swipeDeck.length, 1)];
 
   const handleSearchSubmit = (event: FormEvent) => {
     event.preventDefault();
@@ -179,6 +309,26 @@ export default function Home() {
     }
   };
 
+  const onlyMine = Boolean(
+    isAuthenticated &&
+    me?.id &&
+    listings.length > 0 &&
+    listings.every((l) => l.ownerId === me.id),
+  );
+
+  const hasFilters = Boolean(searchTerm.trim() || activeCategory !== "all");
+
+  const clearSwapFilters = () => {
+    setSearchTerm("");
+    setActiveCategory("all");
+    setSwipeIndex(0);
+    setAuthPrompt(null);
+  };
+  const swipeEmptyMessage = !isAuthenticated
+    ? "Sign in to start swiping. You can still browse listings."
+    : onlyMine
+      ? "No other listings yet. Your listings don't appear in the swap deck."
+      : "You're all caught up ? you've swiped everything that matches your filters (your listings are excluded).";
   const scrollCategories = (direction: "left" | "right") => {
     const node = categoryScrollerRef.current;
     if (!node) return;
@@ -204,16 +354,32 @@ export default function Home() {
         </Card>
       )}
 
-      <section className="overflow-hidden rounded-xl border bg-card shadow-sm">
-        <Image
-          src={HomePageBanner}
-          alt="Swap home page banner"
-          width={1600}
-          height={300}
-          quality={100}
-          priority
-          className="h-auto w-full object-cover"
-        />
+      <section className="relative overflow-hidden rounded-xl border bg-card">
+        <div className="relative h-44 md:h-64">
+          <Image
+            src={HomePageBanner}
+            alt="Featured banner"
+            fill
+            quality={100}
+            className="object-cover"
+            priority
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/35 to-black/15" />
+          <div className="absolute inset-0 flex items-end justify-between p-4 md:p-6">
+            <div>
+              <p className="text-xs uppercase tracking-[0.16em] text-white/80">
+                just for you
+              </p>
+              <h2 className="mt-1 text-4xl max-w-lg font-black text-secondary-foreground md:text-4xl">
+                if you don't want to you don't have to
+              </h2>
+              <p className="mt-2 max-w-xl text-sm text-white/85 md:text-base">
+                you don't have to keep swapping move to the browse tap and
+                search for what exactly you want
+              </p>
+            </div>
+          </div>
+        </div>
       </section>
 
       <section className="rounded-xl border bg-card p-2 shadow-sm">
@@ -253,16 +419,134 @@ export default function Home() {
                     <p className="mb-3 text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
                       Live Swap Deck
                     </p>
-                    <div className="relative">
+                    <div className="relative w-full">
                       <div className="absolute left-3 top-3 z-10 rounded-full bg-card/90 px-3 py-1 text-xs font-semibold text-foreground shadow">
+                        <section className="relative overflow-hidden rounded-xl border bg-card">
+                          <div className="relative h-44 md:h-64">
+                            <Image
+                              src={HomePageBannerFeatured}
+                              alt="Featured banner"
+                              fill
+                              quality={100}
+                              className="object-cover"
+                              priority
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/35 to-black/15" />
+                            <div className="absolute inset-0 flex items-end justify-between p-4 md:p-6">
+                              <div>
+                                <p className="text-xs uppercase tracking-[0.16em] text-white/80">
+                                  Featured Deal
+                                </p>
+                                <h2 className="mt-1 text-4xl font-black text-secondary-foreground md:text-4xl">
+                                  we're just launched{" "}
+                                </h2>
+                                <p className="mt-2 max-w-xl text-sm text-white/85 md:text-base">
+                                  so we may not have to many deals right now but
+                                  you can go a head and start your own listing
+                                  and show people what you have to offer
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        </section>{" "}
+                        <section className="relative overflow-hidden rounded-xl border bg-card">
+                          <div className="relative h-44 md:h-64">
+                            <Image
+                              src={HomePageBannerFeatured}
+                              alt="Featured banner"
+                              fill
+                              quality={100}
+                              className="object-cover"
+                              priority
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/35 to-black/15" />
+                            <div className="absolute inset-0 flex items-end justify-between p-4 md:p-6">
+                              <div>
+                                <p className="text-xs uppercase tracking-[0.16em] text-white/80">
+                                  Featured Deal
+                                </p>
+                                <h2 className="mt-1 text-4xl font-black text-secondary-foreground md:text-4xl">
+                                  we're just launched{" "}
+                                </h2>
+                                <p className="mt-2 max-w-xl text-sm text-white/85 md:text-base">
+                                  so we may not have to many deals right now but
+                                  you can go a head and start your own listing
+                                  and show people what you have to offer
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        </section>{" "}
+                        <section className="relative overflow-hidden rounded-xl border bg-card">
+                          <div className="relative h-44 md:h-64">
+                            <Image
+                              src={HomePageBannerFeatured}
+                              alt="Featured banner"
+                              fill
+                              quality={100}
+                              className="object-cover"
+                              priority
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/35 to-black/15" />
+                            <div className="absolute inset-0 flex items-end justify-between p-4 md:p-6">
+                              <div>
+                                <p className="text-xs uppercase tracking-[0.16em] text-white/80">
+                                  Featured Deal
+                                </p>
+                                <h2 className="mt-1 text-4xl font-black text-secondary-foreground md:text-4xl">
+                                  we're just launched{" "}
+                                </h2>
+                                <p className="mt-2 max-w-xl text-sm text-white/85 md:text-base">
+                                  so we may not have to many deals right now but
+                                  you can go a head and start your own listing
+                                  and show people what you have to offer
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        </section>{" "}
+                        <section className="relative overflow-hidden rounded-xl border bg-card">
+                          <div className="relative h-44 md:h-64">
+                            <Image
+                              src={HomePageBannerFeatured}
+                              alt="Featured banner"
+                              fill
+                              quality={100}
+                              className="object-cover"
+                              priority
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/35 to-black/15" />
+                            <div className="absolute inset-0 flex items-end justify-between p-4 md:p-6">
+                              <div>
+                                <p className="text-xs uppercase tracking-[0.16em] text-white/80">
+                                  Featured Deal
+                                </p>
+                                <h2 className="mt-1 text-4xl font-black text-secondary-foreground md:text-4xl">
+                                  we're just launched{" "}
+                                </h2>
+                                <p className="mt-2 max-w-xl text-sm text-white/85 md:text-base">
+                                  so we may not have to many deals right now but
+                                  you can go a head and start your own listing
+                                  and show people what you have to offer
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        </section>
                         #{swipeIndex + 1}
                       </div>
                       <div
                         className="relative touch-none select-none cursor-grab active:cursor-grabbing"
                         onPointerDown={(event) => {
-                          if (event.pointerType === "mouse" && event.button !== 0) return;
+                          if (
+                            event.pointerType === "mouse" &&
+                            event.button !== 0
+                          )
+                            return;
                           event.preventDefault();
-                          event.currentTarget.setPointerCapture(event.pointerId);
+                          event.currentTarget.setPointerCapture(
+                            event.pointerId,
+                          );
                           setDragStartX(event.clientX);
                           setIsSwiping(true);
                         }}
@@ -272,13 +556,17 @@ export default function Home() {
                         }}
                         onPointerUp={(event) => {
                           try {
-                            event.currentTarget.releasePointerCapture(event.pointerId);
+                            event.currentTarget.releasePointerCapture(
+                              event.pointerId,
+                            );
                           } catch {}
                           void handleCardSwipeEnd();
                         }}
                         onPointerCancel={(event) => {
                           try {
-                            event.currentTarget.releasePointerCapture(event.pointerId);
+                            event.currentTarget.releasePointerCapture(
+                              event.pointerId,
+                            );
                           } catch {}
                           setDragStartX(null);
                           setIsSwiping(false);
@@ -369,8 +657,34 @@ export default function Home() {
 
           {!swipeTarget && (
             <section className="rounded-xl border bg-card p-6 text-center text-muted-foreground">
-              No listings available for swipe yet. Create a listing or clear
-              filters.
+              <p>{swipeEmptyMessage}</p>
+              {hasFilters && (
+                <div className="mt-4 flex flex-col items-center justify-center gap-2 sm:flex-row">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={clearSwapFilters}
+                  >
+                    Clear filters
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => handleViewChange("browse")}
+                  >
+                    Browse listings
+                  </Button>
+                </div>
+              )}
+              {hasFilters && (
+                <p className="mt-3 text-xs text-muted-foreground">
+                  Active filters:{" "}
+                  {activeCategory !== "all"
+                    ? categoryNameById(activeCategory)
+                    : "All"}
+                  {searchTerm.trim() ? ` ? ?${searchTerm.trim()}?` : ""}
+                </p>
+              )}
             </section>
           )}
         </>
@@ -380,7 +694,7 @@ export default function Home() {
         <>
           <section className="rounded-xl border bg-card p-3 shadow-sm md:p-4">
             <div className="flex items-center gap-2">
-              {/* Left arrow — only when scrollable left */}
+              {/* Left arrow â€” only when scrollable left */}
               {canScrollLeft && (
                 <button
                   type="button"
@@ -393,13 +707,13 @@ export default function Home() {
 
               {/* fade + scrollbar-hidden wrapper */}
               <div className="relative flex-1 overflow-hidden">
-                {/* left fade — only when scrollable left */}
+                {/* left fade â€” only when scrollable left */}
                 {canScrollLeft && (
-                  <div className="pointer-events-none absolute left-0 top-0 z-10 h-full w-8 bg-linear-to-r from-card to-transparent" />
+                  <div className="pointer-events-none absolute left-0 top-0 z-10 h-full w-8 bg-linear-to-r from-background to-transparent" />
                 )}
-                {/* right fade — only when scrollable right */}
+                {/* right fade â€” only when scrollable right */}
                 {canScrollRight && (
-                  <div className="pointer-events-none absolute right-0 top-0 z-10 h-full w-8 bg-linear-to-l from-card to-transparent" />
+                  <div className="pointer-events-none absolute right-0 top-0 z-10 h-full w-8 bg-linear-to-l from-background to-transparent" />
                 )}
 
                 <div
@@ -433,7 +747,7 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* Right arrow — only when scrollable right */}
+              {/* Right arrow â€” only when scrollable right */}
               {canScrollRight && (
                 <button
                   type="button"
@@ -449,9 +763,10 @@ export default function Home() {
           <section className="relative overflow-hidden rounded-xl border bg-card">
             <div className="relative h-44 md:h-64">
               <Image
-                src="https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=1600&q=80"
+                src={HomePageBannerFeatured}
                 alt="Featured banner"
                 fill
+                quality={100}
                 className="object-cover"
                 priority
               />
@@ -461,26 +776,14 @@ export default function Home() {
                   <p className="text-xs uppercase tracking-[0.16em] text-white/80">
                     Featured Deal
                   </p>
-                  <h2 className="mt-1 text-2xl font-black text-white md:text-4xl">
-                    Swap Picks This Week
+                  <h2 className="mt-1 text-4xl font-black text-secondary-foreground md:text-4xl">
+                    we're just launched{" "}
                   </h2>
-                  <p className="mt-2 text-sm text-white/85 md:text-base">
-                    Discover top listings and make your best offer.
+                  <p className="mt-2 max-w-xl text-sm text-white/85 md:text-base">
+                    so we may not have to many deals right now but you can go a
+                    head and start your own listing and show people what you
+                    have to offer
                   </p>
-                </div>
-                <div className="hidden items-center gap-2 md:flex">
-                  <button
-                    type="button"
-                    className="grid h-9 w-9 place-items-center rounded-full bg-black/45 text-white backdrop-blur"
-                  >
-                    <ChevronLeft size={16} />
-                  </button>
-                  <button
-                    type="button"
-                    className="grid h-9 w-9 place-items-center rounded-full bg-black/45 text-white backdrop-blur"
-                  >
-                    <ChevronRight size={16} />
-                  </button>
                 </div>
               </div>
             </div>
@@ -491,9 +794,14 @@ export default function Home() {
               <h3 className="text-xl font-semibold">Featured</h3>
               <Badge variant="outline">{featured.length} items</Badge>
             </div>
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <HorizontalSlider>
               {featured.map((product) => (
-                <Link key={product._id} href={`/products/${product.slug}`}>
+                <Link
+                  key={product._id}
+                  href={`/products/${product.slug}`}
+                  data-slider-item="true"
+                  className="block w-[260px] shrink-0 snap-start sm:w-[300px] lg:w-[320px]"
+                >
                   <article className="overflow-hidden rounded-xl border bg-card transition hover:shadow-md">
                     <Image
                       src={
@@ -522,7 +830,7 @@ export default function Home() {
                   </article>
                 </Link>
               ))}
-            </div>
+            </HorizontalSlider>
           </section>
 
           <section className="space-y-3 pb-4">
@@ -542,9 +850,14 @@ export default function Home() {
                 </CardContent>
               </Card>
             ) : (
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              <HorizontalSlider>
                 {listings.map((product) => (
-                  <Link key={product._id} href={`/products/${product.slug}`}>
+                  <Link
+                    key={product._id}
+                    href={`/products/${product.slug}`}
+                    data-slider-item="true"
+                    className="block w-[260px] shrink-0 snap-start sm:w-[300px] lg:w-[320px]"
+                  >
                     <article className="overflow-hidden rounded-xl border bg-card transition hover:shadow-md">
                       <Image
                         src={
@@ -573,7 +886,7 @@ export default function Home() {
                     </article>
                   </Link>
                 ))}
-              </div>
+              </HorizontalSlider>
             )}
           </section>
         </>
