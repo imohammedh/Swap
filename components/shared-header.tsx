@@ -73,7 +73,7 @@ export default function SharedHeader() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { resolvedTheme, setTheme } = useTheme();
-  const { isAuthenticated } = useConvexAuth();
+  const { isAuthenticated, isLoading } = useConvexAuth();
   const { signOut } = useAuthActions();
 
   const [searchTerm, setSearchTerm] = useState(searchParams.get("q") ?? "");
@@ -124,7 +124,7 @@ export default function SharedHeader() {
     router.push("/onboarding/listing");
   };
 
-  return (
+    return (
     <header className="relative top-0 bg-card p-3 shadow-sm md:p-4">
       <MaxWidth className="flex flex-wrap items-center gap-3 md:gap-4">
         <Link
@@ -132,7 +132,6 @@ export default function SharedHeader() {
           className="text-lg flex justify-center items-center gap-2 font-black tracking-tight text-primary"
         >
           <Image src={SwapLogo} width={40} height={40} alt="Swap logo" />
-          SWAPP
         </Link>
 
         <form
@@ -165,7 +164,15 @@ export default function SharedHeader() {
         </div>
 
         {/* Desktop: account when signed in, sign in when not */}
-        {isAuthenticated ? (
+        {isLoading ? (
+          <Button
+            variant="outline"
+            className="hidden h-11 rounded-full md:inline-flex"
+            disabled
+          >
+            <User size={16} /> Account
+          </Button>
+        ) : isAuthenticated ? (
           <Button
             variant="outline"
             className="hidden h-11 rounded-full md:inline-flex"
@@ -230,6 +237,7 @@ export default function SharedHeader() {
               variant="ghost"
               size="icon"
               className="h-10 w-10 rounded-full md:hidden"
+              suppressHydrationWarning
             >
               <Menu size={18} />
             </Button>
@@ -343,7 +351,7 @@ export default function SharedHeader() {
               size="sm"
               className="mb-3 w-full"
               onClick={() => void markAllRead({})}
-              disabled={!isAuthenticated}
+              disabled={isLoading || !isAuthenticated}
             >
               Mark all as read
             </Button>

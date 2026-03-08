@@ -1,27 +1,10 @@
 import "./globals.css";
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Plus_Jakarta_Sans } from "next/font/google";
 import { ConvexAuthNextjsServerProvider } from "@convex-dev/auth/nextjs/server";
+
 import ConvexClientProvider from "@/components/ConvexClientProvider";
 import ThemeProvider from "@/components/theme-provider";
-import AppLayout from "@/components/app-layout";
-import { cn } from "@/lib/utils";
-import { headers } from "next/headers";
-
-const plusJakarta = Plus_Jakarta_Sans({
-  subsets: ["latin"],
-  variable: "--font-sans",
-});
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+import { Toaster } from "@/components/ui/toaster";
 
 export const metadata: Metadata = {
   title: "Swap | Swipe. Trade. Meet.",
@@ -39,16 +22,13 @@ export default function RootLayout({
 }>) {
   return (
     <ConvexAuthNextjsServerProvider>
-      <html
-        lang="en"
-        suppressHydrationWarning
-        className={cn("font-sans", plusJakarta.variable)}
-      >
-        <body
-          className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-        >
+      <html lang="en" suppressHydrationWarning className="font-sans">
+        <body className="antialiased">
           <ConvexClientProvider>
-            <ThemeProvider>{children}</ThemeProvider>
+            <ThemeProvider>
+              {children}
+              <Toaster />
+            </ThemeProvider>
           </ConvexClientProvider>
         </body>
       </html>
