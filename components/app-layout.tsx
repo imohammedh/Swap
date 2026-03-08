@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { FormEvent, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -41,7 +41,7 @@ export default function AppLayout({
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-screen flex flex-col bg-background text-foreground">
       <AppHeader
         searchTerm={searchTerm}
         setSearchTerm={setSearchTerm}
@@ -62,3 +62,4 @@ export default function AppLayout({
     </div>
   );
 }
+
