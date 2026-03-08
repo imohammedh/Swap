@@ -4,7 +4,9 @@ import { Geist, Geist_Mono, Plus_Jakarta_Sans } from "next/font/google";
 import { ConvexAuthNextjsServerProvider } from "@convex-dev/auth/nextjs/server";
 import ConvexClientProvider from "@/components/ConvexClientProvider";
 import ThemeProvider from "@/components/theme-provider";
+import AppLayout from "@/components/app-layout";
 import { cn } from "@/lib/utils";
+import { headers } from "next/headers";
 
 const plusJakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],

@@ -42,7 +42,10 @@ export default function AccountPage() {
     setImageFile(null);
   }, [me]);
 
-  const initials = useMemo(() => getInitials(name || me?.name), [name, me?.name]);
+  const initials = useMemo(
+    () => getInitials(name || me?.name),
+    [name, me?.name],
+  );
 
   const uploadProfileImage = async (): Promise<Id<"_storage"> | undefined> => {
     if (!imageFile) return undefined;
@@ -88,7 +91,9 @@ export default function AccountPage() {
   if (me === undefined) {
     return (
       <Card>
-        <CardContent className="p-6 text-sm text-muted-foreground">Loading profile...</CardContent>
+        <CardContent className="p-6 text-sm text-muted-foreground">
+          Loading profile...
+        </CardContent>
       </Card>
     );
   }
@@ -97,7 +102,9 @@ export default function AccountPage() {
     return (
       <Card>
         <CardContent className="space-y-3 p-6">
-          <p className="text-sm text-muted-foreground">Sign in to view your account.</p>
+          <p className="text-sm text-muted-foreground">
+            Sign in to view your account.
+          </p>
           <Button onClick={() => router.push("/signin")}>Sign in</Button>
         </CardContent>
       </Card>
@@ -111,61 +118,60 @@ export default function AccountPage() {
           <div className="mx-auto grid h-24 w-24 place-items-center overflow-hidden rounded-full bg-primary/10 text-3xl font-bold text-primary">
             {me.image ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={me.image} alt={name || "Profile"} className="h-full w-full object-cover" />
+              <img
+                src={me.image}
+                alt={name || "Profile"}
+                className="h-full w-full object-cover"
+              />
             ) : (
               initials
             )}
           </div>
           <div>
-            <h1 className="text-2xl font-bold">{name || me.name || "Swap User"}</h1>
+            <h1 className="text-2xl font-bold">
+              {name || me.name || "Swap User"}
+            </h1>
             <p className="text-sm text-muted-foreground">{me.email}</p>
-            <p className="text-sm text-muted-foreground">{phone || "No phone set"}</p>
+            <p className="text-sm text-muted-foreground">
+              {phone || "No phone set"}
+            </p>
             <p className="text-sm text-muted-foreground">0.0 | 0 Ratings</p>
           </div>
 
-          <form onSubmit={(event) => void handleSubmit(event)} className="space-y-3 text-left">
+          <form
+            onSubmit={(event) => void handleSubmit(event)}
+            className="space-y-3 text-left"
+          >
             {editing && (
               <>
-                <Input value={name} onChange={(event) => setName(event.target.value)} placeholder="Full name" />
-                <Input value={phone} onChange={(event) => setPhone(event.target.value)} placeholder="Phone" />
+                <Input
+                  value={name}
+                  onChange={(event) => setName(event.target.value)}
+                  placeholder="Full name"
+                />
+                <Input
+                  value={phone}
+                  onChange={(event) => setPhone(event.target.value)}
+                  placeholder="Phone"
+                />
                 <div className="space-y-1">
                   <label className="text-sm font-medium">Profile image</label>
                   <input
                     type="file"
                     accept="image/*"
-                    onChange={(event) => setImageFile(event.target.files?.[0] ?? null)}
+                    onChange={(event) =>
+                      setImageFile(event.target.files?.[0] ?? null)
+                    }
                     className="block w-full rounded-md border bg-background p-2 text-sm"
                   />
-                  {imageFile && <p className="text-xs text-muted-foreground">Selected: {imageFile.name}</p>}
+                  {imageFile && (
+                    <p className="text-xs text-muted-foreground">
+                      Selected: {imageFile.name}
+                    </p>
+                  )}
                 </div>
               </>
             )}
-
-            <div className="flex flex-wrap gap-2">
-              {!editing ? (
-                <Button type="button" variant="outline" onClick={() => setEditing(true)}>
-                  <Pencil size={14} /> Edit Information
-                </Button>
-              ) : (
-                <>
-                  <Button type="submit" disabled={saving}>
-                    {saving ? "Saving..." : "Save Changes"}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => {
-                      setEditing(false);
-                      setName(me.name ?? "");
-                      setPhone(me.phone ?? "");
-                      setImageFile(null);
-                    }}
-                  >
-                    Cancel
-                  </Button>
-                </>
-              )}
-            </div>
 
             {error && <p className="text-sm text-destructive">{error}</p>}
             {success && <p className="text-sm text-emerald-600">{success}</p>}
@@ -173,7 +179,7 @@ export default function AccountPage() {
         </CardContent>
       </Card>
 
-      <Card>
+      {/* <Card>
         <CardHeader>
           <CardTitle>Highest Performing Ads</CardTitle>
         </CardHeader>
@@ -209,7 +215,7 @@ export default function AccountPage() {
             <span>&rsaquo;</span>
           </button>
         </CardContent>
-      </Card>
+      </Card> */}
     </div>
   );
 }
