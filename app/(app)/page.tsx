@@ -410,245 +410,132 @@ export default function Home() {
       {currentView === "swap" && (
         <>
           {swipeTarget && (
-            <section className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_120px]">
-              <Card className="overflow-hidden">
-                <CardContent className="p-4">
-                  <div className="mx-auto max-w-2xl">
-                    <p className="mb-3 text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-                      Live Swap Deck
-                    </p>
-                    <div className="relative w-full">
-                      <div className="absolute left-3 top-3 z-10 rounded-full bg-card/90 px-3 py-1 text-xs font-semibold text-foreground shadow">
-                        <section className="relative overflow-hidden rounded-xl border bg-card">
-                          <div className="relative h-44 md:h-64">
-                            <Image
-                              src={HomePageBannerFeatured}
-                              alt="Featured banner"
-                              fill
-                              quality={100}
-                              className="object-cover"
-                              priority
-                            />
-                            <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/35 to-black/15" />
-                            <div className="absolute inset-0 flex items-end justify-between p-4 md:p-6">
-                              <div>
-                                <p className="text-xs uppercase tracking-[0.16em] text-white/80">
-                                  Featured Deal
-                                </p>
-                                <h2 className="mt-1 text-4xl font-black text-secondary-foreground md:text-4xl">
-                                  we're just launched{" "}
-                                </h2>
-                                <p className="mt-2 max-w-xl text-sm text-white/85 md:text-base">
-                                  so we may not have to many deals right now but
-                                  you can go a head and start your own listing
-                                  and show people what you have to offer
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-                        </section>{" "}
-                        <section className="relative overflow-hidden rounded-xl border bg-card">
-                          <div className="relative h-44 md:h-64">
-                            <Image
-                              src={HomePageBannerFeatured}
-                              alt="Featured banner"
-                              fill
-                              quality={100}
-                              className="object-cover"
-                              priority
-                            />
-                            <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/35 to-black/15" />
-                            <div className="absolute inset-0 flex items-end justify-between p-4 md:p-6">
-                              <div>
-                                <p className="text-xs uppercase tracking-[0.16em] text-white/80">
-                                  Featured Deal
-                                </p>
-                                <h2 className="mt-1 text-4xl font-black text-secondary-foreground md:text-4xl">
-                                  we're just launched{" "}
-                                </h2>
-                                <p className="mt-2 max-w-xl text-sm text-white/85 md:text-base">
-                                  so we may not have to many deals right now but
-                                  you can go a head and start your own listing
-                                  and show people what you have to offer
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-                        </section>{" "}
-                        <section className="relative overflow-hidden rounded-xl border bg-card">
-                          <div className="relative h-44 md:h-64">
-                            <Image
-                              src={HomePageBannerFeatured}
-                              alt="Featured banner"
-                              fill
-                              quality={100}
-                              className="object-cover"
-                              priority
-                            />
-                            <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/35 to-black/15" />
-                            <div className="absolute inset-0 flex items-end justify-between p-4 md:p-6">
-                              <div>
-                                <p className="text-xs uppercase tracking-[0.16em] text-white/80">
-                                  Featured Deal
-                                </p>
-                                <h2 className="mt-1 text-4xl font-black text-secondary-foreground md:text-4xl">
-                                  we're just launched{" "}
-                                </h2>
-                                <p className="mt-2 max-w-xl text-sm text-white/85 md:text-base">
-                                  so we may not have to many deals right now but
-                                  you can go a head and start your own listing
-                                  and show people what you have to offer
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-                        </section>{" "}
-                        <section className="relative overflow-hidden rounded-xl border bg-card">
-                          <div className="relative h-44 md:h-64">
-                            <Image
-                              src={HomePageBannerFeatured}
-                              alt="Featured banner"
-                              fill
-                              quality={100}
-                              className="object-cover"
-                              priority
-                            />
-                            <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/35 to-black/15" />
-                            <div className="absolute inset-0 flex items-end justify-between p-4 md:p-6">
-                              <div>
-                                <p className="text-xs uppercase tracking-[0.16em] text-white/80">
-                                  Featured Deal
-                                </p>
-                                <h2 className="mt-1 text-4xl font-black text-secondary-foreground md:text-4xl">
-                                  we're just launched{" "}
-                                </h2>
-                                <p className="mt-2 max-w-xl text-sm text-white/85 md:text-base">
-                                  so we may not have to many deals right now but
-                                  you can go a head and start your own listing
-                                  and show people what you have to offer
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-                        </section>
-                        #{swipeIndex + 1}
-                      </div>
-                      <div
-                        className="relative touch-none select-none cursor-grab active:cursor-grabbing"
-                        onPointerDown={(event) => {
-                          if (
-                            event.pointerType === "mouse" &&
-                            event.button !== 0
-                          )
-                            return;
-                          event.preventDefault();
-                          event.currentTarget.setPointerCapture(
-                            event.pointerId,
-                          );
-                          setDragStartX(event.clientX);
-                          setIsSwiping(true);
-                        }}
-                        onPointerMove={(event) => {
-                          if (dragStartX === null) return;
-                          setDragX(event.clientX - dragStartX);
-                        }}
-                        onPointerUp={(event) => {
-                          try {
-                            event.currentTarget.releasePointerCapture(
-                              event.pointerId,
-                            );
-                          } catch {}
-                          void handleCardSwipeEnd();
-                        }}
-                        onPointerCancel={(event) => {
-                          try {
-                            event.currentTarget.releasePointerCapture(
-                              event.pointerId,
-                            );
-                          } catch {}
-                          setDragStartX(null);
-                          setIsSwiping(false);
-                          setDragX(0);
-                        }}
-                      >
+            <section className="relative">
+              <div className="relative mx-auto max-w-4xl lg:px-24">
+                <Card className="overflow-hidden">
+                  <CardContent className="p-4">
+                    <div className="mx-auto max-w-2xl">
+                      <p className="mb-3 text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                        Live Swap Deck
+                      </p>
+                      <div className="relative w-full">
                         <div
-                          className="relative h-[58vh] min-h-115 overflow-hidden rounded-2xl border bg-muted/10 shadow-xl"
-                          style={{
-                            transform: `translateX(${dragX}px) rotate(${dragX * 0.03}deg)`,
-                            transition: isSwiping
-                              ? "none"
-                              : "transform 180ms ease",
+                          className="relative touch-none select-none cursor-grab active:cursor-grabbing"
+                          onPointerDown={(event) => {
+                            if (
+                              event.pointerType === "mouse" &&
+                              event.button !== 0
+                            )
+                              return;
+                            event.preventDefault();
+                            event.currentTarget.setPointerCapture(
+                              event.pointerId,
+                            );
+                            setDragStartX(event.clientX);
+                            setIsSwiping(true);
+                          }}
+                          onPointerMove={(event) => {
+                            if (dragStartX === null) return;
+                            setDragX(event.clientX - dragStartX);
+                          }}
+                          onPointerUp={(event) => {
+                            try {
+                              event.currentTarget.releasePointerCapture(
+                                event.pointerId,
+                              );
+                            } catch {}
+                            void handleCardSwipeEnd();
+                          }}
+                          onPointerCancel={(event) => {
+                            try {
+                              event.currentTarget.releasePointerCapture(
+                                event.pointerId,
+                              );
+                            } catch {}
+                            setDragStartX(null);
+                            setIsSwiping(false);
+                            setDragX(0);
                           }}
                         >
-                          <Image
-                            src={
-                              swipeTarget.images[0] ||
-                              "https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=1200&q=80"
-                            }
-                            alt={swipeTarget.title}
-                            fill
-                            className="object-cover"
-                          />
-                          <div className="absolute inset-x-0 bottom-0 bg-linear-to-t from-black/75 via-black/40 to-transparent p-5 text-white">
-                            <p className="text-2xl font-bold">
-                              {swipeTarget.title}
-                            </p>
-                            <p className="mt-1 text-sm text-white/85">
-                              {swipeTarget.location}
-                            </p>
-                            {me?.id && swipeTarget.ownerId === me.id && (
-                              <p className="mt-1 inline-flex rounded-full bg-amber-400/90 px-2 py-0.5 text-xs font-semibold text-black">
-                                Your listing
+                          <div
+                            className="relative h-[58vh] min-h-115 overflow-hidden rounded-2xl"
+                            style={{
+                              transform: `translateX(${dragX}px) rotate(${dragX * 0.03}deg)`,
+                              transition: isSwiping
+                                ? "none"
+                                : "transform 180ms ease",
+                            }}
+                          >
+                            <Image
+                              src={
+                                swipeTarget.images[0] ||
+                                "https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=1200&q=80"
+                              }
+                              alt={swipeTarget.title}
+                              fill
+                              className="object-cover"
+                            />
+                            <div className="absolute inset-x-0 bottom-0 bg-linear-to-t from-black/75 via-black/40 to-transparent p-5 text-white">
+                              <p className="text-2xl font-bold">
+                                {swipeTarget.title}
                               </p>
-                            )}
-                            <p className="mt-2 text-xl font-black">
-                              {formatEgp(swipeTarget.priceEgp)}
-                            </p>
-                            <p className="mt-2 line-clamp-2 text-sm text-white/80">
-                              {swipeTarget.summary}
-                            </p>
+                              <p className="mt-1 text-sm text-white/85">
+                                {swipeTarget.location}
+                              </p>
+                              {me?.id && swipeTarget.ownerId === me.id && (
+                                <p className="mt-1 inline-flex rounded-full bg-amber-400/90 px-2 py-0.5 text-xs font-semibold text-black">
+                                  Your listing
+                                </p>
+                              )}
+                              <p className="mt-2 text-xl font-black">
+                                {formatEgp(swipeTarget.priceEgp)}
+                              </p>
+                              <p className="mt-2 line-clamp-2 text-sm text-white/80">
+                                {swipeTarget.summary}
+                              </p>
+                            </div>
+                          </div>
+                          <div
+                            className={`pointer-events-none absolute left-4 top-16 rounded-full px-3 py-1 text-xs font-bold ${
+                              dragX > 30
+                                ? "bg-emerald-500 text-white"
+                                : "bg-transparent text-transparent"
+                            }`}
+                          >
+                            LIKE
+                          </div>
+                          <div
+                            className={`pointer-events-none absolute right-4 top-16 rounded-full px-3 py-1 text-xs font-bold ${
+                              dragX < -30
+                                ? "bg-rose-500 text-white"
+                                : "bg-transparent text-transparent"
+                            }`}
+                          >
+                            DISLIKE
                           </div>
                         </div>
-                        <div
-                          className={`pointer-events-none absolute left-4 top-16 rounded-full px-3 py-1 text-xs font-bold ${
-                            dragX > 30
-                              ? "bg-emerald-500 text-white"
-                              : "bg-white/80 text-transparent"
-                          }`}
-                        >
-                          LIKE
-                        </div>
-                        <div
-                          className={`pointer-events-none absolute right-4 top-16 rounded-full px-3 py-1 text-xs font-bold ${
-                            dragX < -30
-                              ? "bg-rose-500 text-white"
-                              : "bg-white/80 text-transparent"
-                          }`}
-                        >
-                          DISLIKE
-                        </div>
+                        <div className="pointer-events-none absolute -bottom-3 left-1/2 h-5 w-[92%] -translate-x-1/2 rounded-2xl bg-primary/10" />
+                        <div className="pointer-events-none absolute -bottom-6 left-1/2 h-5 w-[84%] -translate-x-1/2 rounded-2xl bg-primary/5" />
                       </div>
-                      <div className="pointer-events-none absolute -bottom-3 left-1/2 h-5 w-[92%] -translate-x-1/2 rounded-2xl bg-primary/10" />
-                      <div className="pointer-events-none absolute -bottom-6 left-1/2 h-5 w-[84%] -translate-x-1/2 rounded-2xl bg-primary/5" />
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
 
-              <div className="grid grid-cols-2 gap-2 lg:grid-cols-1 lg:content-start">
-                <Button
-                  variant="destructive"
-                  className="h-14 text-base"
-                  onClick={() => void handleSwipe("dislike")}
-                >
-                  <X size={18} /> Dislike
-                </Button>
-                <Button
-                  className="h-14 text-base"
-                  onClick={() => void handleSwipe("like")}
-                >
-                  <Heart size={18} /> Like
-                </Button>
+                <div className="grid grid-cols-2 gap-2 lg:grid-cols-1 lg:content-start">
+                  <Button
+                    variant="destructive"
+                    className="h-14 text-base"
+                    onClick={() => void handleSwipe("dislike")}
+                  >
+                    <X size={18} /> Dislike
+                  </Button>
+                  <Button
+                    className="h-14 text-base"
+                    onClick={() => void handleSwipe("like")}
+                  >
+                    <Heart size={18} /> Like
+                  </Button>
+                </div>
               </div>
             </section>
           )}
