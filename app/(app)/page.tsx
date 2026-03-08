@@ -577,33 +577,42 @@ export default function Home() {
 
       {currentView === "browse" && (
         <>
-          <section className="rounded-xl  bg-transparent p-3 md:p-4">
-            <div className="flex items-center gap-2">
-              {/* Left arrow â€” only when scrollable left */}
+          <section className="rounded-xl bg-transparent py-3 md:py-4">
+            <div className="relative">
               {canScrollLeft && (
                 <button
                   type="button"
                   onClick={() => scrollCategories("left")}
-                  className="grid h-8 w-8 shrink-0 place-items-center rounded-full border bg-background text-muted-foreground"
+                  className="absolute -left-3 top-1/2 z-20 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full border bg-background/80 text-muted-foreground shadow-sm backdrop-blur md:-left-4"
                 >
                   <ChevronLeft size={14} />
                 </button>
               )}
 
+              {canScrollRight && (
+                <button
+                  type="button"
+                  onClick={() => scrollCategories("right")}
+                  className="absolute -right-3 top-1/2 z-20 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full border bg-background/80 text-muted-foreground shadow-sm backdrop-blur md:-right-4"
+                >
+                  <ChevronRight size={14} />
+                </button>
+              )}
+
               {/* fade + scrollbar-hidden wrapper */}
-              <div className="relative flex-1 overflow-hidden">
+              <div className="relative overflow-hidden">
                 {/* left fade â€” only when scrollable left */}
                 {canScrollLeft && (
-                  <div className="pointer-events-none absolute left-0 top-0 z-10 h-full w-8 bg-linear-to-r from-background to-transparent" />
+                  <div className="pointer-events-none absolute left-0 top-0 z-10 h-full w-10 bg-linear-to-r from-background to-transparent" />
                 )}
                 {/* right fade â€” only when scrollable right */}
                 {canScrollRight && (
-                  <div className="pointer-events-none absolute right-0 top-0 z-10 h-full w-8 bg-linear-to-l from-background to-transparent" />
+                  <div className="pointer-events-none absolute right-0 top-0 z-10 h-full w-10 bg-linear-to-l from-background to-transparent" />
                 )}
 
                 <div
                   ref={categoryScrollerRef}
-                  className="flex gap-2 overflow-x-auto px-2 [&::-webkit-scrollbar]:hidden"
+                  className={`flex gap-2 overflow-x-auto [&::-webkit-scrollbar]:hidden ${canScrollLeft ? "pl-10" : "pl-2"} ${canScrollRight ? "pr-10" : "pr-2"}`}
                   style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
                 >
                   {categoryOptions.map((category) => {
@@ -634,17 +643,6 @@ export default function Home() {
                   })}
                 </div>
               </div>
-
-              {/* Right arrow â€” only when scrollable right */}
-              {canScrollRight && (
-                <button
-                  type="button"
-                  onClick={() => scrollCategories("right")}
-                  className="grid h-8 w-8 shrink-0 place-items-center rounded-full border bg-background text-muted-foreground"
-                >
-                  <ChevronRight size={14} />
-                </button>
-              )}
             </div>
           </section>
 
@@ -668,7 +666,7 @@ export default function Home() {
                     we're just launched{" "}
                   </h2>
                   <p className="mt-2 max-w-xl text-sm text-white/85 md:text-base">
-                    so we may not have to many deals right now but you can go a
+                    so we may not have too many deals right now but you can go a
                     head and start your own listing and show people what you
                     have to offer
                   </p>

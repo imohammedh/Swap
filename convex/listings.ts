@@ -1,4 +1,4 @@
-﻿import { v } from "convex/values";
+import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { getAuthUserId } from "@convex-dev/auth/server";
 
@@ -219,6 +219,7 @@ export const getBySlug = query({
     return {
       ...listing,
       ownerName: owner?.name ?? owner?.email ?? "Unknown",
+      ownerImage: owner?.image ?? null,
     };
   },
 });

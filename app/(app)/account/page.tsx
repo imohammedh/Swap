@@ -1,8 +1,8 @@
-"use client";
+﻿"use client";
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
-import { Megaphone, Pencil, Wallet } from "lucide-react";
-import { useMutation, useQuery } from "convex/react";
+import { Megaphone, Pencil } from "lucide-react";
+import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import { useRouter } from "next/navigation";
 import { useAuthActions } from "@convex-dev/auth/react";
 import type { Id } from "@/convex/_generated/dataModel";
@@ -11,6 +11,7 @@ import { api } from "@/convex/_generated/api";
 import { toast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 
 function getInitials(name: string | null | undefined) {
@@ -26,15 +27,24 @@ function getInitials(name: string | null | undefined) {
 export default function AccountPage() {
   const router = useRouter();
   const { signOut } = useAuthActions();
+  const { isAuthenticated } = useConvexAuth();
+
   const me = useQuery(api.users.me, {});
   const updateProfile = useMutation(api.users.updateProfile);
   const generateUploadUrl = useMutation(api.files.generateUploadUrl);
+
+  const notifications = useQuery(
+    api.notifications.listMine,
+    isAuthenticated ? undefined : "skip",
+  );
+  const markAllRead = useMutation(api.notifications.markAllRead);
 
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [unreadOnly, setUnreadOnly] = useState(false);
 
   useEffect(() => {
     if (!me) return;
@@ -47,6 +57,9 @@ export default function AccountPage() {
     () => getInitials(name || me?.name),
     [name, me?.name],
   );
+
+  const visibleNotifications =
+    notifications?.filter((n) => (unreadOnly ? !n.read : true)) ?? [];
 
   const uploadProfileImage = async (): Promise<Id<"_storage"> | undefined> => {
     if (!imageFile) return undefined;
@@ -80,7 +93,8 @@ export default function AccountPage() {
       toast({
         variant: "destructive",
         title: "Update failed",
-        description: err instanceof Error ? err.message : "Failed to update profile",
+        description:
+          err instanceof Error ? err.message : "Failed to update profile",
       });
     } finally {
       setSaving(false);
@@ -104,7 +118,6 @@ export default function AccountPage() {
           </div>
         </CardHeader>
         <CardContent>
-
           {editing ? (
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
@@ -140,9 +153,12 @@ export default function AccountPage() {
           ) : (
             <div className="space-y-4">
               <div className="flex items-center gap-4">
-                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-lg font-bold text-primary">
-                  {initials}
-                </div>
+                <Avatar className="h-16 w-16">
+                  <AvatarImage src={me?.image ?? undefined} alt={me?.name ?? "User"} />
+                  <AvatarFallback className="bg-primary/10 text-primary text-lg font-bold">
+                    {initials}
+                  </AvatarFallback>
+                </Avatar>
                 <div>
                   <p className="font-medium">{me?.name || "No name set"}</p>
                   <p className="text-sm text-muted-foreground">{me?.email}</p>
@@ -162,23 +178,7 @@ export default function AccountPage() {
       </Card>
 
       <div className="grid gap-4 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Wallet size={18} />
-              Wallet
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold">0.00 EGP</p>
-            <p className="text-sm text-muted-foreground">Available balance</p>
-            <Button className="mt-3" size="sm">
-              Add Funds
-            </Button>
-          </CardContent>
-        </Card>
-
-        <Card>
+        <Card className="md:col-span-2">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Megaphone size={18} />
@@ -186,12 +186,47 @@ export default function AccountPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-muted-foreground">
-              Manage your notification preferences
-            </p>
-            <Button variant="outline" className="mt-3" size="sm">
-              Configure
+            <div className="mb-2 flex items-center justify-between">
+              <p className="text-sm text-muted-foreground">
+                Your latest updates
+              </p>
+              <label className="flex cursor-pointer select-none items-center gap-2 text-xs text-muted-foreground">
+                Unread only
+                <input
+                  type="checkbox"
+                  checked={unreadOnly}
+                  onChange={(event) => setUnreadOnly(event.target.checked)}
+                  className="accent-primary"
+                />
+              </label>
+            </div>
+
+            <Button
+              variant="outline"
+              size="sm"
+              className="mb-3 w-full"
+              onClick={() => void markAllRead({})}
+              disabled={!isAuthenticated}
+            >
+              Mark all as read
             </Button>
+
+            <div className="max-h-64 space-y-2 overflow-auto">
+              {visibleNotifications.length === 0 ? (
+                <p className="py-8 text-center text-sm text-muted-foreground">
+                  No New Updates
+                </p>
+              ) : (
+                visibleNotifications.map((item) => (
+                  <div
+                    key={item._id}
+                    className={`rounded-md border p-2 text-sm ${item.read ? "bg-muted/20" : "bg-primary/10"}`}
+                  >
+                    {item.text}
+                  </div>
+                ))
+              )}
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -215,3 +250,4 @@ export default function AccountPage() {
     </div>
   );
 }
+
