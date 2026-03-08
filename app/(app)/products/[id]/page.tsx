@@ -10,8 +10,10 @@ import {
   ChevronRight,
   Heart,
   MessageCircle,
+  Pencil,
   ShieldAlert,
   Star,
+  Trash2,
   X,
 } from "lucide-react";
 
@@ -52,6 +54,11 @@ export default function ProductDetailsPage({
   const swipe = useMutation(api.listings.swipe);
   const createOffer = useMutation(api.offers.create);
   const startConversation = useMutation(api.messages.startConversation);
+  const removeListing = useMutation(api.listings.remove);
+
+  const isOwner = Boolean(
+    isAuthenticated && me?.id && listing?.ownerId === me.id,
+  );
 
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [imageDragStartX, setImageDragStartX] = useState<number | null>(null);
@@ -63,6 +70,8 @@ export default function ProductDetailsPage({
     null,
   );
   const [startingConversation, setStartingConversation] = useState(false);
+  const [manageOpen, setManageOpen] = useState(false);
+  const [deletingListing, setDeletingListing] = useState(false);
 
   useEffect(() => {
     if (listing === null) notFound();
@@ -95,6 +104,16 @@ export default function ProductDetailsPage({
 
   const handleContactSeller = async () => {
     if (!listing || !isAuthenticated) return;
+
+    if (isOwner) {
+      toast({
+        variant: "destructive",
+        title: "You own this listing",
+        description: "You cannot contact yourself.",
+      });
+      return;
+    }
+
     // errors via toaster
     try {
       const { conversationId } = await startConversation({
@@ -105,7 +124,7 @@ export default function ProductDetailsPage({
     } catch (error) {
       toast({
         variant: "destructive",
-        title: "Couldn?t open chat",
+        title: "Couldn't open chat",
         description:
           error instanceof Error ? error.message : "Failed to start conversation",
       });
@@ -118,7 +137,7 @@ export default function ProductDetailsPage({
     if (isOwner) {
       toast({
         variant: "destructive",
-        title: "Can?t make an offer",
+        title: "Cannot make an offer",
         description: "You cannot make an offer on your own listing.",
       });
       return;
@@ -195,8 +214,33 @@ export default function ProductDetailsPage({
       setStartingConversation(false);
     }
   };
+  const handleDeleteListing = async () => {
+    if (!listing || !isAuthenticated) return;
+    if (!isOwner) {
+      toast({
+        variant: "destructive",
+        title: "Unauthorized",
+        description: "Only the seller can delete this listing.",
+      });
+      return;
+    }
 
-  const isOwner = Boolean(isAuthenticated && me?.id && listing?.ownerId === me.id);
+    setDeletingListing(true);
+    try {
+      await removeListing({ listingId: listing._id });
+      toast({ title: "Listing deleted" });
+      setManageOpen(false);
+      router.push("/account/my-listings");
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Delete failed",
+        description: error instanceof Error ? error.message : "Failed to delete listing",
+      });
+    } finally {
+      setDeletingListing(false);
+    }
+  };
 
   if (!listing) {
     return (
@@ -368,37 +412,82 @@ export default function ProductDetailsPage({
           {/* Actions */}
           <Card>
             <CardContent className="space-y-3 pt-6">
-              <Button
-                className="w-full"
-                onClick={handleContactSeller}
-                disabled={!isAuthenticated}
-              >
-                <MessageCircle size={16} className="mr-2" />
-                Contact Seller
-              </Button>
+              {isOwner ? (
+                <>
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    onClick={() => setManageOpen(true)}
+                    disabled={!isAuthenticated}
+                  >
+                    <Pencil size={16} className="mr-2" />
+                    Edit Listing
+                  </Button>
+                  <p className="text-center text-sm text-muted-foreground">
+                    You are the seller. Buyer actions are hidden.
+                  </p>
+                </>
+              ) : (
+                <>
+                  <Button
+                    className="w-full"
+                    onClick={handleContactSeller}
+                    disabled={!isAuthenticated}
+                  >
+                    <MessageCircle size={16} className="mr-2" />
+                    Contact Seller
+                  </Button>
 
-              <Button
-                variant="outline"
-                className="w-full"
-                onClick={openOfferDialog}
-                disabled={!isAuthenticated}
-              >
-                Make an Offer
-              </Button>
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    onClick={openOfferDialog}
+                    disabled={!isAuthenticated}
+                  >
+                    Make an Offer
+                  </Button>
 
-              {!isAuthenticated ? (
-                <p className="text-center text-sm text-muted-foreground">
-                  Sign in to contact seller and make offers
-                </p>
-              ) : isOwner ? (
-                <p className="text-center text-sm text-muted-foreground">
-                  You cannot make offers on your own listing.
-                </p>
-              ) : null}
+                  {!isAuthenticated && (
+                    <p className="text-center text-sm text-muted-foreground">
+                      Sign in to contact seller and make offers
+                    </p>
+                  )}
+                </>
+              )}
             </CardContent>
           </Card>
         </div>
       </div>
+      <Dialog open={manageOpen} onOpenChange={setManageOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit listing</DialogTitle>
+            <DialogDescription>
+              Manage your listing. Deleting will remove it from the marketplace.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="rounded-lg border bg-muted/20 p-3 text-sm">
+            <p className="font-medium">{listing.title}</p>
+            <p className="text-muted-foreground">{formatEgp(listing.priceEgp)}</p>
+          </div>
+
+          <DialogFooter className="sm:justify-between">
+            <Button type="button" variant="outline" onClick={() => setManageOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={handleDeleteListing}
+              disabled={deletingListing}
+            >
+              <Trash2 size={16} className="mr-2" />
+              {deletingListing ? "Deleting..." : "Delete listing"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={offerOpen} onOpenChange={setOfferOpen}>
         <DialogContent>

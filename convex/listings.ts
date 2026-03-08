@@ -222,6 +222,23 @@ export const create = mutation({
   },
 });
 
+export const remove = mutation({
+  args: {
+    listingId: v.id("listings"),
+  },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Please sign in first.");
+
+    const listing = await ctx.db.get(args.listingId);
+    if (!listing) throw new Error("Listing not found.");
+    if (listing.ownerId !== userId) throw new Error("Unauthorized.");
+
+    // Hard-delete the listing. Related offers/conversations are retained.
+    await ctx.db.delete(args.listingId);
+    return { ok: true };
+  },
+});
 export const swipe = mutation({
   args: {
     listingId: v.id("listings"),
