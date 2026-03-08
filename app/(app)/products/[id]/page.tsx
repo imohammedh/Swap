@@ -19,6 +19,16 @@ import { api } from "@/convex/_generated/api";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { toast } from "@/components/ui/use-toast";
 import { categoryNameById } from "@/lib/categories";
 
 function formatEgp(value: number) {
@@ -37,6 +47,7 @@ export default function ProductDetailsPage({
   const router = useRouter();
   const { isAuthenticated } = useConvexAuth();
 
+  const me = useQuery(api.users.me, {});
   const listing = useQuery(api.listings.getBySlug, { slug: id });
   const swipe = useMutation(api.listings.swipe);
   const createOffer = useMutation(api.offers.create);
@@ -44,8 +55,14 @@ export default function ProductDetailsPage({
 
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [imageDragStartX, setImageDragStartX] = useState<number | null>(null);
-  const [actionError, setActionError] = useState<string | null>(null);
   const [offerOpen, setOfferOpen] = useState(false);
+  const [offerSuccessOpen, setOfferSuccessOpen] = useState(false);
+  const [offerAmountInput, setOfferAmountInput] = useState("");
+  const [offerSubmitting, setOfferSubmitting] = useState(false);
+  const [offerLastAmountEgp, setOfferLastAmountEgp] = useState<number | null>(
+    null,
+  );
+  const [startingConversation, setStartingConversation] = useState(false);
 
   useEffect(() => {
     if (listing === null) notFound();
@@ -64,48 +81,122 @@ export default function ProductDetailsPage({
 
   const handleSwipe = async (direction: "like" | "dislike") => {
     if (!listing || !isAuthenticated) return;
-    setActionError(null);
+    // errors via toaster
     try {
       await swipe({ listingId: listing._id, direction });
     } catch (error) {
-      setActionError(
-        error instanceof Error ? error.message : "Failed to swipe",
-      );
-    }
-  };
-
-  const handleCreateOffer = async (data: { type: string; amount?: number }) => {
-    if (!listing || !isAuthenticated) return;
-    setActionError(null);
-    try {
-      await createOffer({
-        listingId: listing._id,
-        amountEgp: data.amount || listing.priceEgp,
-        message: `Offer type: ${data.type}`,
+      toast({
+        variant: "destructive",
+        title: "Something went wrong",
+        description: error instanceof Error ? error.message : "Failed to swipe",
       });
-      setOfferOpen(false);
-    } catch (error) {
-      setActionError(
-        error instanceof Error ? error.message : "Failed to create offer",
-      );
     }
   };
 
   const handleContactSeller = async () => {
     if (!listing || !isAuthenticated) return;
-    setActionError(null);
+    // errors via toaster
     try {
-      const conversation = await startConversation({
+      const { conversationId } = await startConversation({
         listingId: listing._id,
         message: `Hi! I'm interested in your ${listing.title}.`,
       });
-      router.push(`/account/messages/${conversation}`);
+      router.push(`/account/messages?id=${conversationId}`);
     } catch (error) {
-      setActionError(
-        error instanceof Error ? error.message : "Failed to start conversation",
-      );
+      toast({
+        variant: "destructive",
+        title: "Couldn?t open chat",
+        description:
+          error instanceof Error ? error.message : "Failed to start conversation",
+      });
     }
   };
+
+  const openOfferDialog = () => {
+    if (!listing || !isAuthenticated) return;
+
+    if (isOwner) {
+      toast({
+        variant: "destructive",
+        title: "Can?t make an offer",
+        description: "You cannot make an offer on your own listing.",
+      });
+      return;
+    }
+
+    setOfferAmountInput(String(listing.priceEgp ?? ""));
+    setOfferOpen(true);
+  };
+
+  const handleSubmitOffer = async () => {
+    if (!listing || !isAuthenticated) return;
+
+    setOfferSubmitting(true);
+    try {
+      const amountEgp = Number(offerAmountInput);
+      if (!Number.isFinite(amountEgp) || amountEgp <= 0) {
+        toast({
+          variant: "destructive",
+          title: "Invalid amount",
+          description: "Please enter a valid offer amount.",
+        });
+        return;
+      }
+
+      await createOffer({
+        listingId: listing._id,
+        amountEgp,
+        message: "Offer submitted from listing page.",
+      });
+
+      setOfferLastAmountEgp(amountEgp);
+      setOfferOpen(false);
+      setOfferSuccessOpen(true);
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Offer failed",
+        description:
+          error instanceof Error ? error.message : "Failed to submit offer",
+      });
+    } finally {
+      setOfferSubmitting(false);
+    }
+  };
+
+  const handleSendOfferMessage = async () => {
+    if (!listing || !isAuthenticated) return;
+
+    if (isOwner) {
+      toast({
+        variant: "destructive",
+        title: "You own this listing",
+        description: "You cannot message yourself.",
+      });
+      return;
+    }
+    setStartingConversation(true);
+    try {
+      const offerAmount = offerLastAmountEgp ?? listing.priceEgp;
+      const { conversationId } = await startConversation({
+        listingId: listing._id,
+        message: `Hi! I just made an offer of ${formatEgp(offerAmount)} for your ${listing.title}. I'm ready to buy - is it still available?`,
+      });
+      setOfferSuccessOpen(false);
+      router.push(`/account/messages?id=${conversationId}`);
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Couldn't open chat",
+        description:
+          error instanceof Error ? error.message : "Failed to start conversation",
+      });
+    } finally {
+      setStartingConversation(false);
+    }
+  };
+
+  const isOwner = Boolean(isAuthenticated && me?.id && listing?.ownerId === me.id);
 
   if (!listing) {
     return (
@@ -120,14 +211,6 @@ export default function ProductDetailsPage({
 
   return (
     <div className="space-y-6">
-      {actionError && (
-        <Card className="border-destructive/30 bg-destructive/5">
-          <CardContent className="p-4">
-            <p className="text-sm text-destructive">{actionError}</p>
-          </CardContent>
-        </Card>
-      )}
-
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Images */}
         <Card>
@@ -297,62 +380,113 @@ export default function ProductDetailsPage({
               <Button
                 variant="outline"
                 className="w-full"
-                onClick={() => setOfferOpen(true)}
+                onClick={openOfferDialog}
                 disabled={!isAuthenticated}
               >
                 Make an Offer
               </Button>
 
-              {!isAuthenticated && (
+              {!isAuthenticated ? (
                 <p className="text-center text-sm text-muted-foreground">
                   Sign in to contact seller and make offers
                 </p>
-              )}
+              ) : isOwner ? (
+                <p className="text-center text-sm text-muted-foreground">
+                  You cannot make offers on your own listing.
+                </p>
+              ) : null}
             </CardContent>
           </Card>
         </div>
       </div>
 
-      {/* Offer Modal */}
-      {offerOpen && (
-        <Card className="fixed inset-0 z-50 m-auto h-fit max-w-md">
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle>Make an Offer</CardTitle>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setOfferOpen(false)}
-              >
-                <X size={16} />
-              </Button>
+      <Dialog open={offerOpen} onOpenChange={setOfferOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Make an offer</DialogTitle>
+            <DialogDescription>
+              Enter your offer price. You can continue browsing, or submit the
+              offer now.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <Input
+                inputMode="numeric"
+                type="number"
+                min={1}
+                value={offerAmountInput}
+                onChange={(e) => setOfferAmountInput(e.target.value)}
+                placeholder={String(listing.priceEgp)}
+                disabled={offerSubmitting}
+              />
+              <span className="text-sm text-muted-foreground">EGP</span>
             </div>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid gap-2">
-              <Button
-                variant="outline"
-                onClick={() => handleCreateOffer({ type: "swap" })}
-              >
-                <Check size={16} className="mr-2" />
-                Swap Request
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => handleCreateOffer({ type: "cash" })}
-              >
-                Cash Offer
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => handleCreateOffer({ type: "both" })}
-              >
-                Swap or Cash
-              </Button>
+
+            {Number(offerAmountInput) > 0 &&
+              Number.isFinite(Number(offerAmountInput)) && (
+                <p className="text-xs text-muted-foreground">
+                  Offer value: {formatEgp(Number(offerAmountInput))}
+                </p>
+              )}
+          </div>
+
+          <DialogFooter className="sm:justify-between">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setOfferOpen(false)}
+              disabled={offerSubmitting}
+            >
+              Continue browsing
+            </Button>
+            <Button
+              type="button"
+              onClick={handleSubmitOffer}
+              disabled={offerSubmitting}
+            >
+              {offerSubmitting ? "Submitting..." : "Make offer"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={offerSuccessOpen} onOpenChange={setOfferSuccessOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <div className="flex items-center justify-center">
+              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary">
+                <Check size={28} />
+              </div>
             </div>
-          </CardContent>
-        </Card>
-      )}
+            <DialogTitle className="text-center">
+              Your offer has been submitted successfully!
+            </DialogTitle>
+            <DialogDescription className="text-center">
+              Send the seller a message and speed up the process.
+            </DialogDescription>
+          </DialogHeader>
+
+          <DialogFooter className="gap-2 sm:flex-col sm:items-stretch">
+            <Button
+              type="button"
+              onClick={handleSendOfferMessage}
+              disabled={startingConversation}
+            >
+              {startingConversation ? "Opening chat..." : "Send message"}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setOfferSuccessOpen(false)}
+              disabled={startingConversation}
+            >
+              Continue browsing
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

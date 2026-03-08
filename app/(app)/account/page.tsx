@@ -4,9 +4,11 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import { Megaphone, Pencil, Wallet } from "lucide-react";
 import { useMutation, useQuery } from "convex/react";
 import { useRouter } from "next/navigation";
+import { useAuthActions } from "@convex-dev/auth/react";
 import type { Id } from "@/convex/_generated/dataModel";
 
 import { api } from "@/convex/_generated/api";
+import { toast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -23,6 +25,7 @@ function getInitials(name: string | null | undefined) {
 
 export default function AccountPage() {
   const router = useRouter();
+  const { signOut } = useAuthActions();
   const me = useQuery(api.users.me, {});
   const updateProfile = useMutation(api.users.updateProfile);
   const generateUploadUrl = useMutation(api.files.generateUploadUrl);
@@ -32,8 +35,6 @@ export default function AccountPage() {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
 
   useEffect(() => {
     if (!me) return;
@@ -65,8 +66,6 @@ export default function AccountPage() {
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
     setSaving(true);
-    setError(null);
-    setSuccess(null);
 
     try {
       const storageId = await uploadProfileImage();
@@ -75,10 +74,14 @@ export default function AccountPage() {
         phone: phone.trim() || undefined,
         imageStorageId: storageId,
       });
-      setSuccess("Profile updated successfully!");
+      toast({ title: "Saved", description: "Profile updated successfully!" });
       setEditing(false);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to update profile");
+      toast({
+        variant: "destructive",
+        title: "Update failed",
+        description: err instanceof Error ? err.message : "Failed to update profile",
+      });
     } finally {
       setSaving(false);
     }
@@ -101,16 +104,6 @@ export default function AccountPage() {
           </div>
         </CardHeader>
         <CardContent>
-          {error && (
-            <div className="mb-4 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
-              {error}
-            </div>
-          )}
-          {success && (
-            <div className="mb-4 rounded-lg bg-primary/10 p-3 text-sm text-primary">
-              {success}
-            </div>
-          )}
 
           {editing ? (
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -202,6 +195,23 @@ export default function AccountPage() {
           </CardContent>
         </Card>
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Session</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Button
+            type="button"
+            variant="destructive"
+            onClick={() => {
+              void signOut().then(() => router.push("/signin"));
+            }}
+          >
+            Sign out
+          </Button>
+        </CardContent>
+      </Card>
     </div>
   );
 }
