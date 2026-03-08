@@ -12,7 +12,7 @@ export default async function ServerPage() {
     <main className="mx-auto flex max-w-2xl flex-col gap-6 p-8">
       <div className="flex items-center justify-center gap-4">
         <div className="flex items-center gap-4">
-          <Image src="/convex.svg" alt="Convex Logo" width={48} height={48} />
+          <Image src="/favicon.svg" alt="Convex Logo" width={48} height={48} />
           <div className="h-12 w-px bg-slate-300 dark:bg-slate-600"></div>
           <Image
             src="/nextjs-icon-light-background.svg"

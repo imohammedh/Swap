@@ -2,7 +2,7 @@
 
 import MaxWidth from "@/components/max-width";
 import Image from "next/image";
-import SwapLogo from "@/public/convex.svg";
+import SwapLogo from "@/public/favicon.svg";
 const START_YEAR = 2025;
 
 export default function AppFooter() {

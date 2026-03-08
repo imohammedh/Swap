@@ -14,7 +14,7 @@ import {
 import { useMutation, useQuery } from "convex/react";
 import { useConvexAuth } from "convex/react";
 import { useAuthActions } from "@convex-dev/auth/react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   Baby,
   Bell,
@@ -234,8 +234,20 @@ export default function Home() {
 
   const { isAuthenticated } = useConvexAuth();
   const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
   const currentView = searchParams.get("view") === "swap" ? "swap" : "browse";
+
+  const getNextUrl = () => {
+    const query = searchParams.toString();
+    return query ? pathname + "?" + query : pathname;
+  };
+
+  const redirectToSignIn = (message?: string) => {
+    if (message) setAuthPrompt(message);
+    router.push("/signin?next=" + encodeURIComponent(getNextUrl()));
+  };
+
 
   const listings =
     useQuery(api.listings.listPublic, {
@@ -269,7 +281,7 @@ export default function Home() {
     if (!swipeTarget) return;
 
     if (!isAuthenticated) {
-      setAuthPrompt(
+      redirectToSignIn(
         direction === "like"
           ? "Sign in to like a product."
           : "Sign in to dislike a product.",
@@ -346,7 +358,7 @@ export default function Home() {
           <CardContent className="flex flex-wrap items-center justify-between gap-3 p-3 md:p-4">
             <p className="text-sm">{authPrompt}</p>
             {!isAuthenticated && (
-              <Button size="sm" onClick={() => router.push("/signin")}>
+              <Button size="sm" type="button" onClick={() => redirectToSignIn()}>
                 Go to sign in
               </Button>
             )}
@@ -420,13 +432,21 @@ export default function Home() {
                       </p>
                       <div className="relative w-full">
                         <div
-                          className="relative touch-none select-none cursor-grab active:cursor-grabbing"
+                          className={`relative touch-none select-none ${
+                            isAuthenticated
+                              ? "cursor-grab active:cursor-grabbing"
+                              : "cursor-not-allowed"
+                          }`}
                           onPointerDown={(event) => {
                             if (
                               event.pointerType === "mouse" &&
                               event.button !== 0
                             )
                               return;
+                            if (!isAuthenticated) {
+                              redirectToSignIn("Sign in to start swiping.");
+                              return;
+                            }
                             event.preventDefault();
                             event.currentTarget.setPointerCapture(
                               event.pointerId,
@@ -780,3 +800,4 @@ export default function Home() {
     </>
   );
 }
+
