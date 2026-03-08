@@ -43,6 +43,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import Image from "next/image";
+import SwapLogo from "@/public/convex.svg";
 
 const ThemeToggle = dynamic(() => import("@/components/theme-toggle"), {
   ssr: false,
@@ -123,12 +125,13 @@ export default function SharedHeader() {
   };
 
   return (
-    <header className="relative rounded-xl border bg-card p-3 shadow-sm md:p-4">
+    <header className="relative top-0 bg-card p-3 shadow-sm md:p-4">
       <MaxWidth className="flex flex-wrap items-center gap-3 md:gap-4">
         <Link
           href="/"
-          className="text-lg font-black tracking-tight text-primary"
+          className="text-lg flex justify-center items-center gap-2 font-black tracking-tight text-primary"
         >
+          <Image src={SwapLogo} width={40} height={40} alt="Swap logo" />
           SWAPP
         </Link>
 
