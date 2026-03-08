@@ -19,16 +19,13 @@ export default function SharedLayout({
   maxWidthClassName = "space-y-6 py-4 md:py-6",
 }: SharedLayoutProps) {
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <SharedHeader />
-      
-      <main className="flex-1">
-        <MaxWidth className={maxWidthClassName}>
-          {showBreadcrumb && (
-            <AppBreadcrumb tailLabel={breadcrumbTailLabel} />
-          )}
-          {children}
-        </MaxWidth>
+    <div className="min-h-screen flex flex-col bg-background text-foreground">
+      <div className="fixed top-0 left-0 w-full z-9000">
+        <SharedHeader />
+        {showBreadcrumb && <AppBreadcrumb tailLabel={breadcrumbTailLabel} />}
+      </div>
+      <main className="flex-1 mt-32">
+        <MaxWidth className={maxWidthClassName}>{children}</MaxWidth>
       </main>
 
       <AppFooter />
