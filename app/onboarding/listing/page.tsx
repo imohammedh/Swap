@@ -11,6 +11,7 @@ import MaxWidth from "@/components/max-width";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { categoryOptions } from "@/lib/categories";
 import { egyptCities } from "@/lib/egypt-cities";
 
@@ -30,12 +31,12 @@ export default function ListingOnboardingPage() {
   const [location, setLocation] = useState("Cairo");
   const [summary, setSummary] = useState("");
   const [description, setDescription] = useState("");
-  const [imageUrlsText, setImageUrlsText] = useState("");
   const [paymentType, setPaymentType] = useState<"cash" | "swap" | "both">(
     "both",
   );
   const [condition, setCondition] = useState<"new" | "used">("used");
   const [files, setFiles] = useState<File[]>([]);
+  const [previews, setPreviews] = useState<string[]>([]);
 
   const createListing = useMutation(api.listings.create);
   const generateUploadUrl = useMutation(api.files.generateUploadUrl);
@@ -81,11 +82,6 @@ export default function ListingOnboardingPage() {
       }
 
       const imageStorageIds = await uploadSelectedFiles();
-      const imageUrls = imageUrlsText
-        .split(/[\n,]/)
-        .map((value) => value.trim())
-        .filter(Boolean)
-        .slice(0, 5);
 
       const created = await createListing({
         title,
@@ -94,7 +90,7 @@ export default function ListingOnboardingPage() {
         location,
         summary,
         description,
-        imageUrls,
+        imageUrls: [],
         imageStorageIds,
         paymentType,
         condition,
@@ -142,6 +138,10 @@ export default function ListingOnboardingPage() {
         seen.add(key);
       }
 
+      // Generate preview URLs for new files
+      const newPreviews = next.map((file) => URL.createObjectURL(file));
+      setPreviews(newPreviews);
+
       return next;
     });
 
@@ -150,7 +150,12 @@ export default function ListingOnboardingPage() {
   };
 
   const removeFile = (index: number) => {
-    setFiles((current) => current.filter((_, i) => i !== index));
+    setFiles((current) => {
+      const next = current.filter((_, i) => i !== index);
+      const newPreviews = next.map((file) => URL.createObjectURL(file));
+      setPreviews(newPreviews);
+      return next;
+    });
   };
 
   return (
@@ -254,69 +259,121 @@ export default function ListingOnboardingPage() {
                     </option>
                   ))}
                 </select>
+
                 <Input
-                  placeholder="Short summary"
+                  placeholder="Short summary (e.g. iPhone 14 Pro, barely used)"
                   value={summary}
                   onChange={(event) => setSummary(event.target.value)}
                 />
-                <Input
-                  placeholder="Detailed description"
-                  value={description}
-                  onChange={(event) => setDescription(event.target.value)}
-                />
-
-                <div className="space-y-2 rounded-md border p-3">
-                  <label className="text-sm font-medium">
-                    Upload up to 5 images
-                  </label>
-                  <input
-                    type="file"
-                    multiple
-                    accept="image/*"
-                    onChange={handleFileChange}
-                    className="block w-full rounded-md border bg-background p-2 text-sm"
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    {files.length}/5 selected
-                  </p>
-                  {files.length > 0 && (
-                    <div className="space-y-2">
-                      {files.map((file, index) => (
-                        <div
-                          key={`${file.name}-${index}`}
-                          className="flex items-center justify-between rounded border px-2 py-1 text-xs"
-                        >
-                          <span className="truncate">{file.name}</span>
-                          <button
-                            type="button"
-                            onClick={() => removeFile(index)}
-                            className="text-destructive"
-                          >
-                            Remove
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
 
                 <div className="space-y-1">
                   <label className="text-sm font-medium">
-                    Image URLs (optional, comma or new line)
+                    Detailed description
                   </label>
-                  <textarea
-                    value={imageUrlsText}
-                    onChange={(event) => setImageUrlsText(event.target.value)}
-                    rows={3}
-                    className="w-full rounded-md border bg-background p-2 text-sm"
-                    placeholder="https://..."
+                  <Textarea
+                    placeholder="Describe your item in detail — include condition, age, any defects, reason for selling, accessories included, etc."
+                    value={description}
+                    onChange={(event: any) =>
+                      setDescription(event.target.value)
+                    }
+                    rows={6}
+                    className="resize-none"
                   />
+                  <p className="text-xs text-muted-foreground text-right">
+                    {description.length} characters
+                  </p>
+                </div>
+
+                <div className="space-y-3 rounded-md border p-3">
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm font-medium">Photos</label>
+                    <span className="text-xs text-muted-foreground">
+                      {files.length}/5
+                    </span>
+                  </div>
+
+                  {/* Image preview grid — mimics the reference UI */}
+                  <div className="flex flex-wrap gap-3">
+                    {/* Add photos button */}
+                    {files.length < 5 && (
+                      <label className="flex h-24 w-24 cursor-pointer flex-col items-center justify-center gap-1 rounded-md border-2 border-dashed border-muted-foreground/40 bg-muted/20 text-muted-foreground hover:border-primary hover:text-primary transition-colors">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="20"
+                          height="20"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <line x1="12" y1="5" x2="12" y2="19" />
+                          <line x1="5" y1="12" x2="19" y2="12" />
+                        </svg>
+                        <span className="text-xs font-medium">Add Photos</span>
+                        <input
+                          type="file"
+                          multiple
+                          accept="image/*"
+                          onChange={handleFileChange}
+                          className="hidden"
+                        />
+                      </label>
+                    )}
+
+                    {/* Preview thumbnails */}
+                    {previews.map((src, index) => (
+                      <div
+                        key={`${files[index]?.name}-${index}`}
+                        className="relative h-24 w-24 overflow-hidden rounded-md border"
+                      >
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={src}
+                          alt={`Preview ${index + 1}`}
+                          className="h-full w-full object-cover"
+                        />
+                        {/* Cover badge on first image */}
+                        {index === 0 && (
+                          <span className="absolute bottom-0 left-0 right-0 bg-black/60 py-0.5 text-center text-[10px] font-semibold text-white">
+                            Cover
+                          </span>
+                        )}
+                        {/* Remove button */}
+                        <button
+                          type="button"
+                          onClick={() => removeFile(index)}
+                          className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-black/60 text-white hover:bg-destructive transition-colors"
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="10"
+                            height="10"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="3"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <line x1="18" y1="6" x2="6" y2="18" />
+                            <line x1="6" y1="6" x2="18" y2="18" />
+                          </svg>
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+
+                  <p className="text-xs text-muted-foreground">
+                    First image will be used as the cover. Up to 5 photos.
+                  </p>
                 </div>
               </div>
             )}
 
             {step === 3 && (
-              <div className="space-y-2 rounded-lg border bg-muted/20 p-4 text-sm">
+              <div className="space-y-3 rounded-lg border bg-muted/20 p-4 text-sm">
                 <p>
                   <strong>Category:</strong>{" "}
                   {categoryOptions.find((c) => c.id === categoryId)?.name}
@@ -342,13 +399,34 @@ export default function ListingOnboardingPage() {
                 <p>
                   <strong>Description:</strong> {description}
                 </p>
-                <p>
-                  <strong>Uploaded Images:</strong> {files.length}
-                </p>
-                <p>
-                  <strong>Image URLs:</strong>{" "}
-                  {imageUrlsText.trim() || "Not provided"}
-                </p>
+
+                {previews.length > 0 && (
+                  <div className="space-y-1">
+                    <p>
+                      <strong>Images ({files.length}):</strong>
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {previews.map((src, index) => (
+                        <div
+                          key={index}
+                          className="relative h-16 w-16 overflow-hidden rounded-md border"
+                        >
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={src}
+                            alt={`Image ${index + 1}`}
+                            className="h-full w-full object-cover"
+                          />
+                          {index === 0 && (
+                            <span className="absolute bottom-0 left-0 right-0 bg-black/60 py-0.5 text-center text-[9px] font-semibold text-white">
+                              Cover
+                            </span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
