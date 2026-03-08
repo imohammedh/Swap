@@ -731,8 +731,8 @@ export default function Home() {
                         onClick={() => setActiveCategory(category.id)}
                         className={`flex shrink-0 items-center gap-2 rounded-full border bg-primary-foreground px-3 py-2 text-sm font-medium transition ${
                           activeCategory === category.id
-                            ? "border-primary bg-primary/10 text-foreground"
-                            : "border-input bg-background text-foreground"
+                            ? "border-primary bg-primary-foreground/10 text-primary"
+                            : "border-input bg-primary-foreground text-primary"
                         }`}
                       >
                         <span className="grid h-8 w-8 place-items-center rounded-full bg-primary">
