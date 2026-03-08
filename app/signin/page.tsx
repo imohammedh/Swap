@@ -5,7 +5,7 @@ import { useAuthActions } from "@convex-dev/auth/react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Github, KeyRound, Mail, ShieldCheck } from "lucide-react";
+import { Chrome, Github, KeyRound, Mail, ShieldCheck } from "lucide-react";
 
 import MaxWidth from "@/components/max-width";
 import { Button } from "@/components/ui/button";
@@ -35,6 +35,7 @@ export default function SignIn() {
 
   const [loading, setLoading] = useState(false);
   const [loadingGitHub, setLoadingGitHub] = useState(false);
+  const [loadingGoogle, setLoadingGoogle] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
 
@@ -115,6 +116,21 @@ export default function SignIn() {
     }
   };
 
+  const handleGoogle = async () => {
+    setLoadingGoogle(true);
+    setError(null);
+    setInfo(null);
+    try {
+      await signIn("google");
+    } catch (submissionError) {
+      setError(
+        submissionError instanceof Error
+          ? submissionError.message
+          : "Google sign in failed.",
+      );
+      setLoadingGoogle(false);
+    }
+  };
   return (
     <main className="min-h-screen bg-background py-4 md:py-8">
       <MaxWidth>
@@ -140,18 +156,29 @@ export default function SignIn() {
                     </p>
                   </div>
 
-                  <Button
-                    variant="outline"
-                    className="h-11 w-full"
-                    type="button"
-                    onClick={() => void handleGitHub()}
-                    disabled={loadingGitHub || loading}
-                  >
-                    <Github size={16} />
-                    {loadingGitHub
-                      ? "Redirecting to GitHub..."
-                      : "Sign up with GitHub"}
-                  </Button>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button
+                      variant="outline"
+                      className="h-11 w-full"
+                      type="button"
+                      onClick={() => void handleGitHub()}
+                      disabled={loadingGitHub || loadingGoogle || loading}
+                    >
+                      <Github size={16} />
+                      {loadingGitHub ? "GitHub..." : "GitHub"}
+                    </Button>
+
+                    <Button
+                      variant="outline"
+                      className="h-11 w-full"
+                      type="button"
+                      onClick={() => void handleGoogle()}
+                      disabled={loadingGitHub || loadingGoogle || loading}
+                    >
+                      <Chrome size={16} />
+                      {loadingGoogle ? "Google..." : "Google"}
+                    </Button>
+                  </div>
 
                   <div className="relative py-1 text-center text-xs text-muted-foreground">
                     <div className="absolute left-0 right-0 top-1/2 h-px -translate-y-1/2 bg-border" />
@@ -332,4 +359,9 @@ export default function SignIn() {
     </main>
   );
 }
+
+
+
+
+
 
