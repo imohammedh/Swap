@@ -3,22 +3,59 @@
 import Image from "next/image";
 import Link from "next/link";
 import dynamic from "next/dynamic";
-import { FormEvent, useMemo, useRef, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { useConvexAuth } from "convex/react";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Baby, Bell, Book, Building2, Car, ChevronLeft, ChevronRight, Heart, Laptop, LogOut, Menu, MessageSquare, PawPrint, Search, Settings, Shapes, Shirt, ShoppingBag, Smartphone, Sofa, Ticket, Upload, User, X } from "lucide-react";
+import { useTheme } from "next-themes";
+import {
+  Baby,
+  Bell,
+  Book,
+  Building2,
+  Car,
+  ChevronLeft,
+  ChevronRight,
+  Heart,
+  Laptop,
+  LogOut,
+  Menu,
+  MessageSquare,
+  Moon,
+  PawPrint,
+  Search,
+  Settings,
+  Shapes,
+  Shirt,
+  ShoppingBag,
+  Smartphone,
+  Sofa,
+  Sun,
+  Ticket,
+  Upload,
+  User,
+  X,
+} from "lucide-react";
 
 import { api } from "@/convex/_generated/api";
 import AppFooter from "@/components/app-footer";
 import MaxWidth from "@/components/max-width";
 import { Badge } from "@/components/ui/badge";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { categoryNameById, categoryOptions } from "@/lib/categories";
+import HomePageBanner from "@/public/Swap-HomePageBanner.svg";
 
 const ThemeToggle = dynamic(() => import("@/components/theme-toggle"), {
   ssr: false,
@@ -39,6 +76,7 @@ const categoryIcons = {
   pets: PawPrint,
   kids: Baby,
 } as const;
+
 const mobileMenuItems = [
   { href: "/account/offers", label: "Offers", icon: Ticket },
   { href: "/account/messages", label: "Messages", icon: MessageSquare },
@@ -68,10 +106,32 @@ export default function Home() {
   const [isSwiping, setIsSwiping] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const [unreadOnly, setUnreadOnly] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
   const categoryScrollerRef = useRef<HTMLDivElement | null>(null);
+  const notifPanelRef = useRef<HTMLDivElement | null>(null);
+  const notifBellDesktopRef = useRef<HTMLButtonElement | null>(null);
+  const notifBellMobileRef = useRef<HTMLButtonElement | null>(null);
+
+  // Close notification panel on outside click
+  useEffect(() => {
+    if (!notifOpen) return;
+    const handler = (e: MouseEvent) => {
+      const target = e.target as Node;
+      if (
+        notifPanelRef.current?.contains(target) ||
+        notifBellDesktopRef.current?.contains(target) ||
+        notifBellMobileRef.current?.contains(target)
+      )
+        return;
+      setNotifOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [notifOpen]);
 
   const { isAuthenticated } = useConvexAuth();
   const { signOut } = useAuthActions();
+  const { resolvedTheme, setTheme } = useTheme();
   const router = useRouter();
   const searchParams = useSearchParams();
   const currentView = searchParams.get("view") === "swap" ? "swap" : "browse";
@@ -106,7 +166,6 @@ export default function Home() {
       setAuthPrompt("Sign in to create a listing.");
       return;
     }
-
     router.push("/onboarding/listing");
   };
 
@@ -161,6 +220,7 @@ export default function Home() {
       await handleSwipe("dislike");
     }
   };
+
   const scrollCategories = (direction: "left" | "right") => {
     const node = categoryScrollerRef.current;
     if (!node) return;
@@ -174,6 +234,7 @@ export default function Home() {
   return (
     <main className=" flex flex-col min-h-screen bg-background text-foreground">
       <MaxWidth className="flex-1 space-y-6 py-4 md:py-6">
+        {/* ─── HEADER ──────────────────────────────────────────────────── */}
         <header className="relative rounded-xl border bg-card p-3 shadow-sm md:p-4">
           <div className="flex flex-wrap items-center gap-3 md:gap-4">
             <Link
@@ -199,46 +260,27 @@ export default function Home() {
               />
             </form>
 
+            {/* Desktop: create listing */}
             <Button
               onClick={handleCreateListing}
-              className="h-11 rounded-full px-5"
+              className="hidden h-11 rounded-full px-5 md:inline-flex"
             >
               <Upload size={16} /> Create listing
             </Button>
 
-            <ThemeToggle />
+            {/* Desktop: theme toggle */}
+            <div className="hidden md:block">
+              <ThemeToggle />
+            </div>
 
-            {isAuthenticated && (
+            {/* Desktop: account when signed in, sign in when not */}
+            {isAuthenticated ? (
               <Button
                 variant="outline"
                 className="hidden h-11 rounded-full md:inline-flex"
                 onClick={() => router.push("/account")}
               >
                 <User size={16} /> Account
-              </Button>
-            )}
-
-            <Button
-              variant="ghost"
-              size="icon"
-              className="relative h-10 w-10 rounded-full"
-              onClick={() => setNotifOpen((value) => !value)}
-            >
-              <Bell size={18} />
-              {(notifications?.filter((n) => !n.read).length ?? 0) > 0 && (
-                <span className="absolute right-1 top-1 h-2.5 w-2.5 rounded-full bg-primary" />
-              )}
-            </Button>
-
-            {isAuthenticated ? (
-              <Button
-                variant="outline"
-                className="hidden h-11 rounded-full md:inline-flex"
-                onClick={() => {
-                  void signOut().then(() => router.push("/signin"));
-                }}
-              >
-                <LogOut size={16} /> Sign out
               </Button>
             ) : (
               <Button
@@ -250,7 +292,48 @@ export default function Home() {
               </Button>
             )}
 
-            <DropdownMenu>
+            {/* Desktop: notifications bell — always outside any menu */}
+            <Button
+              ref={notifBellDesktopRef}
+              variant="ghost"
+              size="icon"
+              className="relative hidden h-10 w-10 rounded-full md:inline-flex"
+              onClick={() => {
+                setDropdownOpen(false);
+                setNotifOpen((v) => !v);
+              }}
+            >
+              <Bell size={18} />
+              {(notifications?.filter((n) => !n.read).length ?? 0) > 0 && (
+                <span className="absolute right-1 top-1 h-2.5 w-2.5 rounded-full bg-primary" />
+              )}
+            </Button>
+
+            {/* Mobile: notifications bell — always outside dropdown */}
+            <Button
+              ref={notifBellMobileRef}
+              variant="ghost"
+              size="icon"
+              className="relative h-10 w-10 rounded-full md:hidden"
+              onClick={() => {
+                setDropdownOpen(false);
+                setNotifOpen((v) => !v);
+              }}
+            >
+              <Bell size={18} />
+              {(notifications?.filter((n) => !n.read).length ?? 0) > 0 && (
+                <span className="absolute right-1 top-1 h-2.5 w-2.5 rounded-full bg-primary" />
+              )}
+            </Button>
+
+            {/* ── Mobile hamburger dropdown ─────────────────────────── */}
+            <DropdownMenu
+              open={dropdownOpen}
+              onOpenChange={(open) => {
+                setDropdownOpen(open);
+                if (open) setNotifOpen(false);
+              }}
+            >
               <DropdownMenuTrigger asChild>
                 <Button
                   variant="ghost"
@@ -260,50 +343,78 @@ export default function Home() {
                   <Menu size={18} />
                 </Button>
               </DropdownMenuTrigger>
+
               <DropdownMenuContent
                 align="end"
                 sideOffset={10}
-                className="z-[120] w-72 rounded-xl border border-border/80 bg-card p-2 shadow-2xl"
+                className="w-72 rounded-xl bg-card p-2"
               >
-                <DropdownMenuLabel className="rounded-lg bg-muted/30 p-3">
+                {/* Profile header */}
+                <DropdownMenuLabel className="rounded-lg bg-muted/40 p-3 mb-1">
                   <div className="flex items-center gap-3">
-                    <div className="grid h-12 w-12 place-items-center overflow-hidden rounded-full bg-primary/10 text-sm font-bold text-primary">
-                      {me?.image ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={me.image} alt={me.name ?? "Profile"} className="h-full w-full object-cover" />
-                      ) : (
-                        initials(me?.name)
-                      )}
-                    </div>
-                    <div>
-                      <p className="font-semibold">{me?.name ?? "Your account"}</p>
-                      <p className="text-xs text-muted-foreground">0.0 | 0 Ratings</p>
+                    <Avatar className="h-11 w-11">
+                      <AvatarImage
+                        src={me?.image ?? undefined}
+                        alt={me?.name ?? "User"}
+                      />
+                      <AvatarFallback className="bg-primary/10 text-primary text-sm font-bold">
+                        {initials(me?.name)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="min-w-0">
+                      <p className="truncate font-semibold">
+                        {me?.name ?? "Your account"}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        0.0 · 0 Ratings
+                      </p>
                     </div>
                   </div>
                 </DropdownMenuLabel>
-                <DropdownMenuItem
-                  className="mt-2 rounded-md bg-muted/40 font-medium"
-                  onClick={() => router.push("/account")}
-                >
+
+                {/* Account */}
+                <DropdownMenuItem onClick={() => router.push("/account")}>
                   <User size={16} /> Manage Account
                 </DropdownMenuItem>
+
+                {/* Create listing — mobile only */}
+                <DropdownMenuItem onClick={handleCreateListing}>
+                  <Upload size={16} /> Create listing
+                </DropdownMenuItem>
+
+                {/* Theme */}
+                <DropdownMenuItem
+                  onClick={() =>
+                    setTheme(resolvedTheme === "dark" ? "light" : "dark")
+                  }
+                >
+                  {resolvedTheme === "dark" ? (
+                    <Sun size={16} />
+                  ) : (
+                    <Moon size={16} />
+                  )}
+                  {resolvedTheme === "dark" ? "Light mode" : "Dark mode"}
+                </DropdownMenuItem>
+
                 <DropdownMenuSeparator />
+
                 {mobileMenuItems.map((item) => {
                   const Icon = item.icon;
                   return (
                     <DropdownMenuItem
                       key={item.href}
-                      className="rounded-md"
                       onClick={() => router.push(item.href)}
                     >
                       <Icon size={16} /> {item.label}
                     </DropdownMenuItem>
                   );
                 })}
+
                 <DropdownMenuSeparator />
+
                 {isAuthenticated ? (
                   <DropdownMenuItem
-                    className="rounded-md"
+                    className="text-destructive focus:text-destructive"
                     onClick={() => {
                       void signOut().then(() => router.push("/signin"));
                     }}
@@ -311,7 +422,7 @@ export default function Home() {
                     <LogOut size={16} /> Sign out
                   </DropdownMenuItem>
                 ) : (
-                  <DropdownMenuItem className="rounded-md" onClick={() => router.push("/signin")}>
+                  <DropdownMenuItem onClick={() => router.push("/signin")}>
                     <User size={16} /> Sign in
                   </DropdownMenuItem>
                 )}
@@ -319,16 +430,21 @@ export default function Home() {
             </DropdownMenu>
           </div>
 
+          {/* ── Notification panel ─────────────────────────────────────── */}
           {notifOpen && (
-            <div className="absolute right-3 top-[72px] z-20 w-[320px] rounded-xl border bg-card p-3 shadow-lg">
+            <div
+              ref={notifPanelRef}
+              className="absolute right-3 top-[72px] z-20 w-[320px] rounded-xl border bg-card p-3 shadow-lg"
+            >
               <div className="mb-2 flex items-center justify-between">
                 <p className="text-xl font-semibold">Notifications</p>
-                <label className="flex items-center gap-2 text-xs text-muted-foreground">
-                  Show unread only
+                <label className="flex cursor-pointer select-none items-center gap-2 text-xs text-muted-foreground">
+                  Unread only
                   <input
                     type="checkbox"
                     checked={unreadOnly}
                     onChange={(event) => setUnreadOnly(event.target.checked)}
+                    className="accent-primary"
                   />
                 </label>
               </div>
@@ -373,6 +489,18 @@ export default function Home() {
             </CardContent>
           </Card>
         )}
+
+        <section className="overflow-hidden rounded-xl border bg-card shadow-sm">
+          <Image
+            src={HomePageBanner}
+            alt="Swap home page banner"
+            width={1600}
+            height={300}
+            quality={100}
+            priority
+            className="h-auto w-full object-cover"
+          />
+        </section>
 
         <section className="rounded-xl border bg-card p-2 shadow-sm">
           <div className="grid grid-cols-2 gap-2">
@@ -438,7 +566,9 @@ export default function Home() {
                             className="relative h-[58vh] min-h-[460px] overflow-hidden rounded-2xl border bg-muted/10 shadow-xl"
                             style={{
                               transform: `translateX(${dragX}px) rotate(${dragX * 0.03}deg)`,
-                              transition: isSwiping ? "none" : "transform 180ms ease",
+                              transition: isSwiping
+                                ? "none"
+                                : "transform 180ms ease",
                             }}
                           >
                             <Image
@@ -451,14 +581,20 @@ export default function Home() {
                               className="object-cover"
                             />
                             <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 via-black/40 to-transparent p-5 text-white">
-                              <p className="text-2xl font-bold">{swipeTarget.title}</p>
-                              <p className="mt-1 text-sm text-white/85">{swipeTarget.location}</p>
+                              <p className="text-2xl font-bold">
+                                {swipeTarget.title}
+                              </p>
+                              <p className="mt-1 text-sm text-white/85">
+                                {swipeTarget.location}
+                              </p>
                               {me?.id && swipeTarget.ownerId === me.id && (
                                 <p className="mt-1 inline-flex rounded-full bg-amber-400/90 px-2 py-0.5 text-xs font-semibold text-black">
                                   Your listing
                                 </p>
                               )}
-                              <p className="mt-2 text-xl font-black">{formatEgp(swipeTarget.priceEgp)}</p>
+                              <p className="mt-2 text-xl font-black">
+                                {formatEgp(swipeTarget.priceEgp)}
+                              </p>
                               <p className="mt-2 line-clamp-2 text-sm text-white/80">
                                 {swipeTarget.summary}
                               </p>
@@ -510,7 +646,8 @@ export default function Home() {
 
             {!swipeTarget && (
               <section className="rounded-xl border bg-card p-6 text-center text-muted-foreground">
-                No listings available for swipe yet. Create a listing or clear filters.
+                No listings available for swipe yet. Create a listing or clear
+                filters.
               </section>
             )}
           </>
@@ -520,32 +657,57 @@ export default function Home() {
           <>
             <section className="rounded-xl border bg-card p-3 shadow-sm md:p-4">
               <div className="flex items-center gap-2">
-                <button type="button" onClick={() => scrollCategories("left")} className="grid h-8 w-8 shrink-0 place-items-center rounded-full border bg-background text-muted-foreground">
+                <button
+                  type="button"
+                  onClick={() => scrollCategories("left")}
+                  className="grid h-8 w-8 shrink-0 place-items-center rounded-full border bg-background text-muted-foreground"
+                >
                   <ChevronLeft size={14} />
                 </button>
-                <div ref={categoryScrollerRef} className="flex flex-1 gap-2 overflow-x-auto pb-1">
-                  {categoryOptions.map((category) => {
-                    const Icon = categoryIcons[category.id as keyof typeof categoryIcons] ?? Shapes;
-                    return (
-                      <button
-                        key={category.id}
-                        type="button"
-                        onClick={() => setActiveCategory(category.id)}
-                        className={`flex shrink-0 items-center gap-2 rounded-full border px-3 py-2 text-sm font-medium transition ${
-                          activeCategory === category.id
-                            ? "border-primary bg-primary/10 text-foreground"
-                            : "border-input bg-background text-foreground"
-                        }`}
-                      >
-                        <span className="grid h-8 w-8 place-items-center rounded-full bg-muted">
-                          <Icon size={16} />
-                        </span>
-                        <span>{category.name}</span>
-                      </button>
-                    );
-                  })}
+
+                {/* fade + scrollbar-hidden wrapper */}
+                <div className="relative flex-1 overflow-hidden">
+                  {/* left fade */}
+                  <div className="pointer-events-none absolute left-0 top-0 z-10 h-full w-8 bg-gradient-to-r from-card to-transparent" />
+                  {/* right fade */}
+                  <div className="pointer-events-none absolute right-0 top-0 z-10 h-full w-8 bg-gradient-to-l from-card to-transparent" />
+
+                  <div
+                    ref={categoryScrollerRef}
+                    className="flex gap-2 overflow-x-auto px-2 [&::-webkit-scrollbar]:hidden"
+                    style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+                  >
+                    {categoryOptions.map((category) => {
+                      const Icon =
+                        categoryIcons[
+                          category.id as keyof typeof categoryIcons
+                        ] ?? Shapes;
+                      return (
+                        <button
+                          key={category.id}
+                          type="button"
+                          onClick={() => setActiveCategory(category.id)}
+                          className={`flex shrink-0 items-center gap-2 rounded-full border px-3 py-2 text-sm font-medium transition ${
+                            activeCategory === category.id
+                              ? "border-primary bg-primary/10 text-foreground"
+                              : "border-input bg-background text-foreground"
+                          }`}
+                        >
+                          <span className="grid h-8 w-8 place-items-center rounded-full bg-muted">
+                            <Icon size={16} />
+                          </span>
+                          <span>{category.name}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
-                <button type="button" onClick={() => scrollCategories("left")} className="grid h-8 w-8 shrink-0 place-items-center rounded-full border bg-background text-muted-foreground">
+
+                <button
+                  type="button"
+                  onClick={() => scrollCategories("right")}
+                  className="grid h-8 w-8 shrink-0 place-items-center rounded-full border bg-background text-muted-foreground"
+                >
                   <ChevronRight size={14} />
                 </button>
               </div>
@@ -563,15 +725,27 @@ export default function Home() {
                 <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/35 to-black/15" />
                 <div className="absolute inset-0 flex items-end justify-between p-4 md:p-6">
                   <div>
-                    <p className="text-xs uppercase tracking-[0.16em] text-white/80">Featured Deal</p>
-                    <h2 className="mt-1 text-2xl font-black text-white md:text-4xl">Swap Picks This Week</h2>
-                    <p className="mt-2 text-sm text-white/85 md:text-base">Discover top listings and make your best offer.</p>
+                    <p className="text-xs uppercase tracking-[0.16em] text-white/80">
+                      Featured Deal
+                    </p>
+                    <h2 className="mt-1 text-2xl font-black text-white md:text-4xl">
+                      Swap Picks This Week
+                    </h2>
+                    <p className="mt-2 text-sm text-white/85 md:text-base">
+                      Discover top listings and make your best offer.
+                    </p>
                   </div>
                   <div className="hidden items-center gap-2 md:flex">
-                    <button type="button" className="grid h-9 w-9 place-items-center rounded-full bg-black/45 text-white backdrop-blur">
+                    <button
+                      type="button"
+                      className="grid h-9 w-9 place-items-center rounded-full bg-black/45 text-white backdrop-blur"
+                    >
                       <ChevronLeft size={16} />
                     </button>
-                    <button type="button" className="grid h-9 w-9 place-items-center rounded-full bg-black/45 text-white backdrop-blur">
+                    <button
+                      type="button"
+                      className="grid h-9 w-9 place-items-center rounded-full bg-black/45 text-white backdrop-blur"
+                    >
                       <ChevronRight size={16} />
                     </button>
                   </div>
@@ -599,9 +773,15 @@ export default function Home() {
                         className="h-40 w-full object-cover"
                       />
                       <div className="space-y-1 p-3">
-                        <p className="text-xs text-muted-foreground">{product.location}</p>
-                        <h4 className="line-clamp-2 font-semibold">{product.title}</h4>
-                        <p className="line-clamp-1 text-sm text-muted-foreground">{product.summary}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {product.location}
+                        </p>
+                        <h4 className="line-clamp-2 font-semibold">
+                          {product.title}
+                        </h4>
+                        <p className="line-clamp-1 text-sm text-muted-foreground">
+                          {product.summary}
+                        </p>
                         <p className="pt-1 text-lg font-bold text-primary">
                           {formatEgp(product.priceEgp)}
                         </p>
@@ -644,9 +824,15 @@ export default function Home() {
                           className="h-40 w-full object-cover"
                         />
                         <div className="space-y-1 p-3">
-                          <p className="text-xs text-muted-foreground">{product.location}</p>
-                          <h4 className="line-clamp-2 font-semibold">{product.title}</h4>
-                          <p className="line-clamp-1 text-sm text-muted-foreground">{product.summary}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {product.location}
+                          </p>
+                          <h4 className="line-clamp-2 font-semibold">
+                            {product.title}
+                          </h4>
+                          <p className="line-clamp-1 text-sm text-muted-foreground">
+                            {product.summary}
+                          </p>
                           <p className="pt-1 text-lg font-bold text-primary">
                             {formatEgp(product.priceEgp)}
                           </p>
@@ -664,19 +850,3 @@ export default function Home() {
     </main>
   );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
