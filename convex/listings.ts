@@ -1,4 +1,4 @@
-import { v } from "convex/values";
+﻿import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { getAuthUserId } from "@convex-dev/auth/server";
 
@@ -73,6 +73,89 @@ export const listPublic = query({
   },
 });
 
+export const listForDeck = query({
+  args: {
+    search: v.optional(v.string()),
+    categoryId: v.optional(v.string()),
+    location: v.optional(v.string()),
+    minPrice: v.optional(v.number()),
+    maxPrice: v.optional(v.number()),
+    paymentType: v.optional(
+      v.union(v.literal("cash"), v.literal("swap"), v.literal("both")),
+    ),
+    condition: v.optional(v.union(v.literal("new"), v.literal("used"))),
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+
+    const all = await ctx.db.query("listings").order("desc").collect();
+    const q = args.search?.trim().toLowerCase() ?? "";
+
+    const swipedListingIds = new Set<unknown>();
+    if (userId) {
+      const swipes = await ctx.db
+        .query("swipes")
+        .withIndex("by_user", (q) => q.eq("userId", userId))
+        .collect();
+      for (const row of swipes) {
+        swipedListingIds.add(row.listingId);
+      }
+    }
+
+    const filtered = all.filter((listing) => {
+      if (!listing.isPublished) return false;
+      if (userId) {
+        // Never include your own listings in the swipe deck.
+        if (listing.ownerId === userId) return false;
+        // Don't show listings you've already liked/disliked.
+        if (swipedListingIds.has(listing._id)) return false;
+      }
+
+      if (
+        args.categoryId &&
+        args.categoryId !== "all" &&
+        listing.categoryId !== args.categoryId
+      ) {
+        return false;
+      }
+
+      if (args.location && args.location !== "all" && listing.location !== args.location) {
+        return false;
+      }
+
+      if (args.minPrice !== undefined && listing.priceEgp < args.minPrice) return false;
+      if (args.maxPrice !== undefined && listing.priceEgp > args.maxPrice) return false;
+
+      if (args.paymentType && args.paymentType !== "both") {
+        const p = listing.paymentType ?? "both";
+        if (p !== args.paymentType && p !== "both") return false;
+      }
+
+      if (args.condition && (listing.condition ?? "used") !== args.condition) return false;
+
+      if (!q) return true;
+
+      return (
+        listing.title.toLowerCase().includes(q) ||
+        listing.location.toLowerCase().includes(q) ||
+        listing.summary.toLowerCase().includes(q)
+      );
+    });
+
+    const limited = args.limit ? filtered.slice(0, Math.max(0, args.limit)) : filtered;
+
+    return Promise.all(
+      limited.map(async (listing) => {
+        const owner = await ctx.db.get(listing.ownerId);
+        return {
+          ...listing,
+          ownerName: owner?.name ?? owner?.email ?? "Unknown",
+        };
+      }),
+    );
+  },
+});
 export const listMine = query({
   args: {},
   handler: async (ctx) => {
@@ -300,7 +383,8 @@ export const swipe = mutation({
     await ctx.db.patch(args.listingId, { likeCount, dislikeCount });
 
     const actor = await ctx.db.get(userId);
-    const actorName = actor?.name ?? actor?.email ?? "Someone";
+    const actorEmail = actor?.email ?? "unknown email";
+    const actorLabel = actor?.name ? `${actor.name} (${actorEmail})` : actorEmail;
 
     await ctx.db.insert("notifications", {
       userId: listing.ownerId,
@@ -309,8 +393,8 @@ export const swipe = mutation({
       type: args.direction === "like" ? "liked" : "disliked",
       text:
         args.direction === "like"
-          ? `${actorName} liked your listing: ${listing.title}`
-          : `${actorName} disliked your listing: ${listing.title}`,
+          ? `${actorLabel} liked your listing: ${listing.title}`
+          : `${actorLabel} disliked your listing: ${listing.title}`,
       read: false,
     });
 

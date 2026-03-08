@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Image from "next/image";
 import { notFound, useRouter } from "next/navigation";
@@ -249,9 +249,12 @@ export default function ProductDetailsPage({
           <div className="mb-4 h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
           <p className="text-muted-foreground">Loading...</p>
         </div>
-      </div>
+                </div>
     );
   }
+
+  const likeCount = listing.likeCount ?? 0;
+  const dislikeCount = listing.dislikeCount ?? 0;
 
   return (
     <div className="space-y-6">
@@ -346,6 +349,17 @@ export default function ProductDetailsPage({
                     </Badge>
                     <Badge variant="outline">{listing.condition}</Badge>
                   </div>
+
+                  <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                    <span className="inline-flex items-center gap-1">
+                      <Heart className="h-4 w-4" />
+                      <span className="tabular-nums">{likeCount}</span>
+                    </span>
+                    <span className="inline-flex items-center gap-1">
+                      <X className="h-4 w-4" />
+                      <span className="tabular-nums">{dislikeCount}</span>
+                    </span>
+                  </div>
                 </div>
 
                 {/* Action buttons */}
@@ -355,21 +369,25 @@ export default function ProductDetailsPage({
                       <Button
                         variant="outline"
                         size="sm"
+                        className="gap-1"
                         onClick={() => handleSwipe("like")}
                       >
                         <Heart size={16} />
+                        <span className="text-xs tabular-nums">{likeCount}</span>
                       </Button>
                       <Button
                         variant="outline"
                         size="sm"
+                        className="gap-1"
                         onClick={() => handleSwipe("dislike")}
                       >
                         <X size={16} />
+                        <span className="text-xs tabular-nums">{dislikeCount}</span>
                       </Button>
                     </>
                   )}
                 </div>
-              </div>
+                </div>
             </CardHeader>
             <CardContent className="space-y-4">
               <p className="text-muted-foreground">{listing.description}</p>
@@ -381,7 +399,7 @@ export default function ProductDetailsPage({
                     Verified seller • {listing.location}
                   </span>
                 </div>
-              </div>
+                </div>
             </CardContent>
           </Card>
 
@@ -457,7 +475,7 @@ export default function ProductDetailsPage({
             </CardContent>
           </Card>
         </div>
-      </div>
+                </div>
       <Dialog open={manageOpen} onOpenChange={setManageOpen}>
         <DialogContent>
           <DialogHeader>
@@ -548,7 +566,7 @@ export default function ProductDetailsPage({
               <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary">
                 <Check size={28} />
               </div>
-            </div>
+                </div>
             <DialogTitle className="text-center">
               Your offer has been submitted successfully!
             </DialogTitle>
