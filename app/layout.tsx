@@ -11,7 +11,7 @@ export const metadata: Metadata = {
   description:
     "Swap is a Tinder-style local marketplace with swipe discovery, chat, and live meetup location sharing.",
   icons: {
-    icon: "/convex.svg",
+    icon: "/favicon.svg",
   },
 };
 

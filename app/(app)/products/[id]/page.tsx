@@ -1,7 +1,7 @@
-"use client";
+﻿"use client";
 
 import Image from "next/image";
-import { notFound, useRouter } from "next/navigation";
+import { notFound, usePathname, useRouter, useSearchParams } from "next/navigation";
 import { use, useEffect, useState } from "react";
 import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import {
@@ -48,6 +48,8 @@ export default function ProductDetailsPage({
 }) {
   const { id } = use(params);
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const { isAuthenticated } = useConvexAuth();
 
   const me = useQuery(api.users.me, {});
@@ -89,8 +91,21 @@ export default function ProductDetailsPage({
     });
   };
 
+  const getNextUrl = () => {
+    const query = searchParams.toString();
+    return query ? pathname + "?" + query : pathname;
+  };
+
+  const redirectToSignIn = () => {
+    router.push("/signin?next=" + encodeURIComponent(getNextUrl()));
+  };
+
   const handleSwipe = async (direction: "like" | "dislike") => {
-    if (!listing || !isAuthenticated) return;
+    if (!listing) return;
+    if (!isAuthenticated) {
+      redirectToSignIn();
+      return;
+    }
     // errors via toaster
     try {
       await swipe({ listingId: listing._id, direction });
@@ -397,7 +412,7 @@ export default function ProductDetailsPage({
                 <div className="flex items-center gap-2">
                   <ShieldAlert size={16} className="text-muted-foreground" />
                   <span className="text-sm text-muted-foreground">
-                    Verified seller • {listing.location}
+                    Verified seller â€¢ {listing.location}
                   </span>
                 </div>
                 </div>
@@ -601,3 +616,4 @@ export default function ProductDetailsPage({
     </div>
   );
 }
+

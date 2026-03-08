@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Image from "next/image";
 import Link from "next/link";
@@ -6,7 +6,7 @@ import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { useConvexAuth } from "convex/react";
 import { useAuthActions } from "@convex-dev/auth/react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   Baby,
   Bell,
@@ -98,8 +98,20 @@ export default function Home() {
 
   const { isAuthenticated } = useConvexAuth();
   const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
   const currentView = searchParams.get("view") === "swap" ? "swap" : "browse";
+
+  const getNextUrl = () => {
+    const query = searchParams.toString();
+    return query ? pathname + "?" + query : pathname;
+  };
+
+  const redirectToSignIn = (message?: string) => {
+    if (message) setAuthPrompt(message);
+    router.push("/signin?next=" + encodeURIComponent(getNextUrl()));
+  };
+
 
   const listings =
     useQuery(api.listings.listPublic, {
@@ -139,7 +151,7 @@ export default function Home() {
     if (!swipeTarget) return;
 
     if (!isAuthenticated) {
-      setAuthPrompt(
+      redirectToSignIn(
         direction === "like"
           ? "Sign in to like a product."
           : "Sign in to dislike a product.",
@@ -196,7 +208,7 @@ export default function Home() {
           <CardContent className="flex flex-wrap items-center justify-between gap-3 p-3 md:p-4">
             <p className="text-sm">{authPrompt}</p>
             {!isAuthenticated && (
-              <Button size="sm" onClick={() => router.push("/signin")}>
+              <Button size="sm" type="button" onClick={() => redirectToSignIn()}>
                 Go to sign in
               </Button>
             )}
@@ -258,8 +270,16 @@ export default function Home() {
                         #{swipeIndex + 1}
                       </div>
                       <div
-                        className="relative touch-none select-none"
+                        className={`relative touch-none select-none ${
+                          isAuthenticated
+                            ? "cursor-grab active:cursor-grabbing"
+                            : "cursor-not-allowed"
+                        }`}
                         onPointerDown={(event) => {
+                          if (!isAuthenticated) {
+                            redirectToSignIn("Sign in to start swiping.");
+                            return;
+                          }
                           setDragStartX(event.clientX);
                           setIsSwiping(true);
                         }}
@@ -371,7 +391,7 @@ export default function Home() {
         <>
           <section className="rounded-xl border bg-card p-3 shadow-sm md:p-4">
             <div className="flex items-center gap-2">
-              {/* Left arrow — only when scrollable left */}
+              {/* Left arrow â€” only when scrollable left */}
               {canScrollLeft && (
                 <button
                   type="button"
@@ -384,11 +404,11 @@ export default function Home() {
 
               {/* fade + scrollbar-hidden wrapper */}
               <div className="relative flex-1 overflow-hidden">
-                {/* left fade — only when scrollable left */}
+                {/* left fade â€” only when scrollable left */}
                 {canScrollLeft && (
                   <div className="pointer-events-none absolute left-0 top-0 z-10 h-full w-8 bg-linear-to-r from-card to-transparent" />
                 )}
-                {/* right fade — only when scrollable right */}
+                {/* right fade â€” only when scrollable right */}
                 {canScrollRight && (
                   <div className="pointer-events-none absolute right-0 top-0 z-10 h-full w-8 bg-linear-to-l from-card to-transparent" />
                 )}
@@ -424,7 +444,7 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* Right arrow — only when scrollable right */}
+              {/* Right arrow â€” only when scrollable right */}
               {canScrollRight && (
                 <button
                   type="button"
@@ -572,3 +592,5 @@ export default function Home() {
     </>
   );
 }
+
+

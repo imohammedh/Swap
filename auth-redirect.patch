@@ -1,0 +1,207 @@
+﻿diff --git a/app/(app)/page.tsx b/app/(app)/page.tsx
+--- a/app/(app)/page.tsx
++++ b/app/(app)/page.tsx
+@@
+-import { useRouter, useSearchParams } from "next/navigation";
++import { usePathname, useRouter, useSearchParams } from "next/navigation";
+@@
+   const { isAuthenticated } = useConvexAuth();
+   const router = useRouter();
++  const pathname = usePathname();
+   const searchParams = useSearchParams();
+   const currentView = searchParams.get("view") === "swap" ? "swap" : "browse";
++
++  const getNextUrl = () => {
++    const query = searchParams.toString();
++    return query ? `${pathname}?${query}` : pathname;
++  };
++
++  const redirectToSignIn = (message?: string) => {
++    if (message) setAuthPrompt(message);
++    router.push(`/signin?next=${encodeURIComponent(getNextUrl())}`);
++  };
+@@
+   const handleSwipe = async (direction: "like" | "dislike") => {
+     if (!swipeTarget) return;
+ 
+     if (!isAuthenticated) {
+-      setAuthPrompt(
+-        direction === "like"
+-          ? "Sign in to like a product."
+-          : "Sign in to dislike a product.",
+-      );
++      redirectToSignIn(
++        direction === "like"
++          ? "Sign in to like a product."
++          : "Sign in to dislike a product.",
++      );
+       return;
+     }
+@@
+             <p className="text-sm">{authPrompt}</p>
+             {!isAuthenticated && (
+-              <Button size="sm" onClick={() => router.push("/signin")}>
++              <Button size="sm" type="button" onClick={() => redirectToSignIn()}>
+                 Go to sign in
+               </Button>
+             )}
+@@
+-                        <div
+-                          className="relative touch-none select-none cursor-grab active:cursor-grabbing"
++                        <div
++                          className={`relative touch-none select-none ${
++                            isAuthenticated
++                              ? "cursor-grab active:cursor-grabbing"
++                              : "cursor-not-allowed"
++                          }`}
+                           onPointerDown={(event) => {
+                             if (
+                               event.pointerType === "mouse" &&
+                               event.button !== 0
+                             )
+                               return;
++                            if (!isAuthenticated) {
++                              redirectToSignIn("Sign in to start swiping.");
++                              return;
++                            }
+                             event.preventDefault();
+                             event.currentTarget.setPointerCapture(
+                               event.pointerId,
+                             );
+                             setDragStartX(event.clientX);
+                             setIsSwiping(true);
+                           }}
+
+diff --git a/app/(app)/page-clean.tsx b/app/(app)/page-clean.tsx
+--- a/app/(app)/page-clean.tsx
++++ b/app/(app)/page-clean.tsx
+@@
+-import { useRouter, useSearchParams } from "next/navigation";
++import { usePathname, useRouter, useSearchParams } from "next/navigation";
+@@
+   const { isAuthenticated } = useConvexAuth();
+   const router = useRouter();
++  const pathname = usePathname();
+   const searchParams = useSearchParams();
+   const currentView = searchParams.get("view") === "swap" ? "swap" : "browse";
++
++  const getNextUrl = () => {
++    const query = searchParams.toString();
++    return query ? `${pathname}?${query}` : pathname;
++  };
++
++  const redirectToSignIn = (message?: string) => {
++    if (message) setAuthPrompt(message);
++    router.push(`/signin?next=${encodeURIComponent(getNextUrl())}`);
++  };
+@@
+   const handleSwipe = async (direction: "like" | "dislike") => {
+     if (!swipeTarget) return;
+ 
+     if (!isAuthenticated) {
+-      setAuthPrompt(
+-        direction === "like"
+-          ? "Sign in to like a product."
+-          : "Sign in to dislike a product.",
+-      );
++      redirectToSignIn(
++        direction === "like"
++          ? "Sign in to like a product."
++          : "Sign in to dislike a product.",
++      );
+       return;
+     }
+@@
+             <p className="text-sm">{authPrompt}</p>
+             {!isAuthenticated && (
+-              <Button size="sm" onClick={() => router.push("/signin")}>
++              <Button size="sm" type="button" onClick={() => redirectToSignIn()}>
+                 Go to sign in
+               </Button>
+             )}
+@@
+-                      <div
+-                        className="relative touch-none select-none"
++                      <div
++                        className={`relative touch-none select-none ${
++                          isAuthenticated
++                            ? "cursor-grab active:cursor-grabbing"
++                            : "cursor-not-allowed"
++                        }`}
+                         onPointerDown={(event) => {
++                          if (!isAuthenticated) {
++                            redirectToSignIn("Sign in to start swiping.");
++                            return;
++                          }
+                           setDragStartX(event.clientX);
+                           setIsSwiping(true);
+                         }}
+
+diff --git a/app/(app)/products/[id]/page.tsx b/app/(app)/products/[id]/page.tsx
+--- a/app/(app)/products/[id]/page.tsx
++++ b/app/(app)/products/[id]/page.tsx
+@@
+ import Image from "next/image";
+-import { notFound, useRouter } from "next/navigation";
++import { notFound, usePathname, useRouter, useSearchParams } from "next/navigation";
+ import { use, useEffect, useState } from "react";
+ import { useConvexAuth, useMutation, useQuery } from "convex/react";
+@@
+   const { id } = use(params);
+   const router = useRouter();
++  const pathname = usePathname();
++  const searchParams = useSearchParams();
+   const { isAuthenticated } = useConvexAuth();
+@@
++  const getNextUrl = () => {
++    const query = searchParams.toString();
++    return query ? `${pathname}?${query}` : pathname;
++  };
++
++  const redirectToSignIn = () => {
++    router.push(`/signin?next=${encodeURIComponent(getNextUrl())}`);
++  };
++
+   const handleSwipe = async (direction: "like" | "dislike") => {
+-    if (!listing || !isAuthenticated) return;
++    if (!listing) return;
++    if (!isAuthenticated) {
++      redirectToSignIn();
++      return;
++    }
+     // errors via toaster
+     try {
+       await swipe({ listingId: listing._id, direction });
+     } catch (error) {
+@@
+   };
+
+diff --git a/app/signin/page.tsx b/app/signin/page.tsx
+--- a/app/signin/page.tsx
++++ b/app/signin/page.tsx
+@@
+ import Image from "next/image";
+ import Link from "next/link";
+-import { useRouter } from "next/navigation";
++import { useRouter, useSearchParams } from "next/navigation";
+ import { Github, KeyRound, Mail, ShieldCheck } from "lucide-react";
+@@
+ export default function SignIn() {
+   const { signIn } = useAuthActions();
+   const router = useRouter();
++  const searchParams = useSearchParams();
++
++  const nextParam = searchParams.get("next");
++  const safeNext = nextParam && nextParam.startsWith("/") ? nextParam : "/";
+@@
+       if (result.signingIn) {
+-        router.push("/");
++        router.push(safeNext);
+         return;
+       }
+@@
+       if (result.signingIn) {
+-        router.push("/");
++        router.push(safeNext);
+         return;
+       }

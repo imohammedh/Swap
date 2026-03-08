@@ -44,7 +44,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Image from "next/image";
-import SwapLogo from "@/public/convex.svg";
+import SwapLogo from "@/public/favicon.svg";
 
 const ThemeToggle = dynamic(() => import("@/components/theme-toggle"), {
   ssr: false,
@@ -124,7 +124,7 @@ export default function SharedHeader() {
     router.push("/onboarding/listing");
   };
 
-    return (
+  return (
     <header className="relative top-0 bg-card p-3 shadow-sm md:p-4">
       <MaxWidth className="flex flex-wrap items-center gap-3 md:gap-4">
         <Link

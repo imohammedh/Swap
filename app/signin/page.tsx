@@ -4,14 +4,14 @@ import { FormEvent, useState } from "react";
 import { useAuthActions } from "@convex-dev/auth/react";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Github, KeyRound, Mail, ShieldCheck } from "lucide-react";
 
 import MaxWidth from "@/components/max-width";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import SwapLogo from "@/public/convex.svg";
+import SwapLogo from "@/public/favicon.svg";
 
 const heroImage =
   "https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?auto=format&fit=crop&w=1400&q=80";
@@ -19,6 +19,10 @@ const heroImage =
 export default function SignIn() {
   const { signIn } = useAuthActions();
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const nextParam = searchParams.get("next");
+  const safeNext = nextParam && nextParam.startsWith("/") ? nextParam : "/";
 
   const [flow, setFlow] = useState<"signIn" | "signUp">("signUp");
   const [awaitingCode, setAwaitingCode] = useState(false);
@@ -48,7 +52,7 @@ export default function SignIn() {
       });
 
       if (result.signingIn) {
-        router.push("/");
+        router.push(safeNext);
         return;
       }
 
@@ -79,7 +83,7 @@ export default function SignIn() {
       });
 
       if (result.signingIn) {
-        router.push("/");
+        router.push(safeNext);
         return;
       }
 
@@ -328,3 +332,4 @@ export default function SignIn() {
     </main>
   );
 }
+
