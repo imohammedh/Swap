@@ -5,7 +5,7 @@ import { useAuthActions } from "@convex-dev/auth/react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Chrome, Github, KeyRound, Mail, ShieldCheck } from "lucide-react";
+import { Chrome, Github, KeyRound, Mail, ShieldCheck, Eye, EyeOff } from "lucide-react";
 
 import MaxWidth from "@/components/max-width";
 import { Button } from "@/components/ui/button";
@@ -31,6 +31,7 @@ export default function SignIn() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [code, setCode] = useState("");
 
   const [loading, setLoading] = useState(false);
@@ -233,11 +234,19 @@ export default function SignIn() {
                           value={password}
                           onChange={(event) => setPassword(event.target.value)}
                           placeholder="Create a password"
-                          type="password"
+                          type={showPassword ? "text" : "password"}
                           minLength={8}
-                          className="h-11 pl-9"
+                          className="h-11 pl-9 pr-10"
                           required
                         />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword((value) => !value)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                          aria-label={showPassword ? "Hide password" : "Show password"}
+                        >
+                          {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                        </button>
                       </div>
                       <p className="text-xs text-muted-foreground">
                         Must be at least 8 characters
@@ -247,7 +256,7 @@ export default function SignIn() {
                     <Button
                       className="h-11 w-full"
                       type="submit"
-                      disabled={loading || loadingGitHub}
+                      disabled={loading || loadingGitHub || loadingGoogle}
                     >
                       {loading
                         ? "Please wait..."
@@ -297,7 +306,7 @@ export default function SignIn() {
                   <Button
                     className="h-11 w-full"
                     type="submit"
-                    disabled={loading || loadingGitHub}
+                    disabled={loading || loadingGitHub || loadingGoogle}
                   >
                     {loading ? "Verifying..." : "Verify and continue"}
                   </Button>
@@ -359,6 +368,8 @@ export default function SignIn() {
     </main>
   );
 }
+
+
 
 
 
