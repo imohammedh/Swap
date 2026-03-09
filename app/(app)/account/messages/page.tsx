@@ -3,12 +3,13 @@
 import { FormEvent, useMemo, useState } from "react";
 import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { MessageSquare } from "lucide-react";
+import { ChevronLeft, MessageSquare } from "lucide-react";
 
 import { api } from "@/convex/_generated/api";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
 
 function formatTime(time: number) {
   return new Intl.DateTimeFormat("en-US", {
@@ -69,10 +70,8 @@ export default function MessagesPage() {
             size={48}
             className="mx-auto mb-4 text-muted-foreground"
           />
-          <h3 className="text-lg font-semibold mb-2">
-            Sign in to view messages
-          </h3>
-          <p className="text-muted-foreground mb-4">
+          <h3 className="mb-2 text-lg font-semibold">Sign in to view messages</h3>
+          <p className="mb-4 text-muted-foreground">
             You need to be signed in to view and send messages.
           </p>
           <Button onClick={() => router.push("/signin")}>Sign In</Button>
@@ -83,8 +82,8 @@ export default function MessagesPage() {
 
   if (!conversations) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      <div className="flex h-64 items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-primary"></div>
       </div>
     );
   }
@@ -97,7 +96,7 @@ export default function MessagesPage() {
             size={48}
             className="mx-auto mb-4 text-muted-foreground"
           />
-          <h3 className="text-lg font-semibold mb-2">No messages yet</h3>
+          <h3 className="mb-2 text-lg font-semibold">No messages yet</h3>
           <p className="text-muted-foreground">
             Start a conversation by contacting a seller about their listing.
           </p>
@@ -108,12 +107,11 @@ export default function MessagesPage() {
 
   return (
     <div className="grid gap-4 lg:grid-cols-[300px_1fr]">
-      {/* Conversations List */}
-      <Card>
+      <Card className={cn(selectedConversation ? "hidden lg:block" : "block", "overflow-hidden")}>
         <CardHeader>
           <CardTitle>Messages</CardTitle>
         </CardHeader>
-        <CardContent className="p-0">
+        <CardContent className="overflow-hidden p-0">
           <div className="space-y-1">
             {conversations.map((conversation) => {
               const otherUser = conversation.participants.find(
@@ -130,7 +128,7 @@ export default function MessagesPage() {
                     router.push(`/account/messages?id=${conversation._id}`)
                   }
                   aria-current={isActive ? "page" : undefined}
-                  className={`w-full border-l-2 p-3 text-left transition-colors duration-150 ${
+                  className={`w-full overflow-hidden border-l-2 p-3 text-left transition-colors duration-150 ${
                     isActive
                       ? "border-l-primary bg-primary/15 shadow-sm hover:bg-primary/20"
                       : "border-l-transparent hover:border-l-primary/60 hover:bg-primary/10"
@@ -146,27 +144,27 @@ export default function MessagesPage() {
                     >
                       {otherUser?.name?.[0] || "U"}
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex min-w-0 flex-col gap-0.5 sm:flex-row sm:items-center sm:justify-between sm:gap-2">
                         <p
-                          className={`truncate ${
+                          className={`line-clamp-1 ${
                             isActive ? "font-semibold text-foreground" : "font-medium"
                           }`}
                         >
                           {otherUser?.name || "Unknown"}
                         </p>
                         {lastMessage && (
-                          <span className="text-xs text-muted-foreground">
+                          <span className="shrink-0 self-start text-xs text-muted-foreground sm:self-auto">
                             {formatTime(lastMessage._creationTime)}
                           </span>
                         )}
                       </div>
                       {lastMessage && (
-                        <p className="text-sm text-muted-foreground truncate">
+                        <p className="line-clamp-2 break-words text-sm leading-snug text-muted-foreground">
                           {lastMessage.body}
                         </p>
                       )}
-                      <p className="text-xs text-muted-foreground mt-1">
+                      <p className="mt-1 line-clamp-1 break-words text-xs text-muted-foreground">
                         {conversation.listing?.title}
                       </p>
                     </div>
@@ -178,23 +176,32 @@ export default function MessagesPage() {
         </CardContent>
       </Card>
 
-      {/* Conversation */}
       {selectedConversation ? (
-        <Card>
-          <CardHeader>
-            <div className="flex items-center gap-3">
+        <Card className="min-w-0">
+          <CardHeader className="space-y-3">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => router.push("/account/messages")}
+              className="w-fit px-2 lg:hidden"
+            >
+              <ChevronLeft size={16} className="mr-1" />
+              Back
+            </Button>
+            <div className="flex min-w-0 items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary">
                 {selectedConversation.participants.find(
                   (p) => p.userId !== selectedConversation.currentUserId,
                 )?.name?.[0] || "U"}
               </div>
-              <div>
-                <p className="font-medium">
+              <div className="min-w-0">
+                <p className="truncate font-medium">
                   {selectedConversation.participants.find(
                     (p) => p.userId !== selectedConversation.currentUserId,
                   )?.name || "Unknown"}
                 </p>
-                <p className="text-sm text-muted-foreground">
+                <p className="line-clamp-2 break-words text-sm leading-snug text-muted-foreground">
                   {selectedConversation.listing?.title}
                 </p>
               </div>
@@ -202,8 +209,7 @@ export default function MessagesPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {/* Messages */}
-              <div className="h-96 overflow-y-auto space-y-3 rounded-lg border border-border/70 bg-background/30 p-4">
+              <div className="h-[60vh] max-h-96 space-y-3 overflow-y-auto rounded-lg border border-border/70 bg-background/30 p-3 sm:p-4">
                 {selectedConversation.messages.map((msg) => {
                   const isOwn =
                     msg.senderId === selectedConversation.currentUserId;
@@ -213,15 +219,15 @@ export default function MessagesPage() {
                       className={`flex ${isOwn ? "justify-end" : "justify-start"}`}
                     >
                       <div
-                        className={`max-w-xs rounded-xl px-3 py-2 shadow-sm ${
+                        className={`max-w-[85%] rounded-xl px-3 py-2 shadow-sm sm:max-w-xs ${
                           isOwn
                             ? "border border-primary/30 bg-primary text-primary-foreground"
                             : "border border-border/70 bg-muted/80 text-foreground"
                         }`}
                       >
-                        <p className="text-sm">{msg.body}</p>
+                        <p className="break-words text-sm">{msg.body}</p>
                         <p
-                          className={`text-xs mt-1 ${
+                          className={`mt-1 text-xs ${
                             isOwn
                               ? "text-primary-foreground/70"
                               : "text-foreground/60"
@@ -235,8 +241,10 @@ export default function MessagesPage() {
                 })}
               </div>
 
-              {/* Message Input */}
-              <form onSubmit={handleSendMessage} className="flex gap-2 pt-1">
+              <form
+                onSubmit={handleSendMessage}
+                className="flex flex-col gap-2 pt-1 sm:flex-row"
+              >
                 <Input
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
@@ -256,15 +264,13 @@ export default function MessagesPage() {
           </CardContent>
         </Card>
       ) : (
-        <Card>
+        <Card className="hidden lg:block">
           <CardContent className="p-8 text-center">
             <MessageSquare
               size={48}
               className="mx-auto mb-4 text-muted-foreground"
             />
-            <h3 className="text-lg font-semibold mb-2">
-              Select a conversation
-            </h3>
+            <h3 className="mb-2 text-lg font-semibold">Select a conversation</h3>
             <p className="text-muted-foreground">
               Choose a conversation from the list to start messaging.
             </p>
