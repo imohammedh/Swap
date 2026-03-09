@@ -1,4 +1,4 @@
-import { defineSchema, defineTable } from "convex/server";
+﻿import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 import { authTables } from "@convex-dev/auth/server";
 
@@ -61,7 +61,14 @@ export default defineSchema({
     userId: v.id("users"),
     actorId: v.optional(v.id("users")),
     listingId: v.optional(v.id("listings")),
-    type: v.union(v.literal("liked"), v.literal("disliked")),
+    offerId: v.optional(v.id("offers")),
+    conversationId: v.optional(v.id("conversations")),
+    type: v.union(
+      v.literal("liked"),
+      v.literal("disliked"),
+      v.literal("offer_pending"),
+      v.literal("message"),
+    ),
     text: v.string(),
     read: v.boolean(),
   }).index("by_user", ["userId"]),
@@ -86,3 +93,4 @@ export default defineSchema({
     readBy: v.array(v.id("users")),
   }).index("by_conversation_createdAt", ["conversationId", "createdAt"]),
 });
+

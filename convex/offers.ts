@@ -1,4 +1,4 @@
-import { getAuthUserId } from "@convex-dev/auth/server";
+﻿import { getAuthUserId } from "@convex-dev/auth/server";
 import { v } from "convex/values";
 
 import { mutation, query } from "./_generated/server";
@@ -31,6 +31,19 @@ export const create = mutation({
       amountEgp,
       message: args.message?.trim() || undefined,
       status: "pending",
+    });
+    const buyer = await ctx.db.get(buyerId);
+    const buyerEmail = buyer?.email ?? "unknown email";
+    const buyerLabel = buyer?.name ? `${buyer.name} (${buyerEmail})` : buyerEmail;
+
+    await ctx.db.insert("notifications", {
+      userId: listing.ownerId,
+      actorId: buyerId,
+      listingId: args.listingId,
+      offerId,
+      type: "offer_pending",
+      text: `${buyerLabel} made an offer (EGP ${amountEgp}) on your listing: ${listing.title}`,
+      read: false,
     });
 
     return { offerId };
@@ -125,3 +138,5 @@ export const updateStatus = mutation({
     return { ok: true };
   },
 });
+
+
