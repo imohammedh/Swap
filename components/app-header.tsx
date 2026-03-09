@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -96,6 +96,25 @@ export default function AppHeader({
   const visibleNotifications =
     notifications?.filter((n) => (unreadOnly ? !n.read : true)) ?? [];
 
+  const getNotificationHref = (item: NonNullable<typeof notifications>[number]) => {
+    if (item?.type === "message" && item?.conversationId) {
+      return `/account/messages?id=${item.conversationId}`;
+    }
+    if (item?.type === "offer_pending") return "/account/offers";
+    if (item?.type === "liked" || item?.type === "disliked") {
+      return "/account/my-listings";
+    }
+    return null;
+  };
+
+  const handleNotificationClick = (item: NonNullable<typeof notifications>[number]) => {
+    const href = getNotificationHref(item);
+    if (!href) return;
+    setNotifOpen(false);
+    router.push(href);
+  };
+
+
   // Close notification panel on outside click
   useEffect(() => {
     if (!notifOpen) return;
@@ -171,7 +190,7 @@ export default function AppHeader({
           </Button>
         )}
 
-        {/* Desktop: notifications bell — always outside any menu */}
+        {/* Desktop: notifications bell â€” always outside any menu */}
         <Button
           ref={notifBellDesktopRef}
           variant="ghost"
@@ -183,12 +202,12 @@ export default function AppHeader({
           }}
         >
           <Bell size={18} />
-          {(notifications?.filter((n: any) => !n.read).length ?? 0) > 0 && (
+          {(notifications?.filter((n) => !n.read).length ?? 0) > 0 && (
             <span className="absolute right-1 top-1 h-2.5 w-2.5 rounded-full bg-primary" />
           )}
         </Button>
 
-        {/* Mobile: notifications bell — always outside dropdown */}
+        {/* Mobile: notifications bell â€” always outside dropdown */}
         <Button
           ref={notifBellMobileRef}
           variant="ghost"
@@ -200,12 +219,12 @@ export default function AppHeader({
           }}
         >
           <Bell size={18} />
-          {(notifications?.filter((n: any) => !n.read).length ?? 0) > 0 && (
+          {(notifications?.filter((n) => !n.read).length ?? 0) > 0 && (
             <span className="absolute right-1 top-1 h-2.5 w-2.5 rounded-full bg-primary" />
           )}
         </Button>
 
-        {/* ── Mobile hamburger dropdown ─────────────────────────── */}
+        {/* â”€â”€ Mobile hamburger dropdown â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
         <DropdownMenu
           open={dropdownOpen}
           onOpenChange={(open) => {
@@ -245,7 +264,7 @@ export default function AppHeader({
                     {me?.name ?? "Your account"}
                   </p>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    0.0 · 0 Ratings
+                    0.0 Â· 0 Ratings
                   </p>
                 </div>
               </div>
@@ -256,7 +275,7 @@ export default function AppHeader({
               <User size={16} /> Manage Account
             </DropdownMenuItem>
 
-            {/* Create listing — mobile only */}
+            {/* Create listing â€” mobile only */}
             <DropdownMenuItem onClick={onCreateListing}>
               <Upload size={16} /> Create listing
             </DropdownMenuItem>
@@ -308,7 +327,7 @@ export default function AppHeader({
           </DropdownMenuContent>
         </DropdownMenu>
 
-        {/* ── Notification panel ─────────────────────────────────────── */}
+        {/* â”€â”€ Notification panel â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
         {notifOpen && (
           <div
             ref={notifPanelRef}
@@ -341,13 +360,15 @@ export default function AppHeader({
                   No New Updates
                 </p>
               ) : (
-                visibleNotifications.map((item: any) => (
-                  <div
+                visibleNotifications.map((item) => (
+                  <button
+                    type="button"
                     key={item._id}
-                    className={`rounded-md border p-2 text-sm ${item.read ? "bg-muted/20" : "bg-primary/10"}`}
+                    onClick={() => handleNotificationClick(item)}
+                    className={`w-full rounded-md border p-2 text-left text-sm hover:bg-muted/40 ${item.read ? "bg-muted/20" : "bg-primary/10"}`}
                   >
                     {item.text}
-                  </div>
+                  </button>
                 ))
               )}
             </div>
@@ -357,3 +378,5 @@ export default function AppHeader({
     </header>
   );
 }
+
+

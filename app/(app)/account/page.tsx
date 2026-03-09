@@ -61,6 +61,23 @@ export default function AccountPage() {
   const visibleNotifications =
     notifications?.filter((n) => (unreadOnly ? !n.read : true)) ?? [];
 
+  const getNotificationHref = (item: NonNullable<typeof notifications>[number]) => {
+    if (item?.type === "message" && item?.conversationId) {
+      return `/account/messages?id=${item.conversationId}`;
+    }
+    if (item?.type === "offer_pending") return "/account/offers";
+    if (item?.type === "liked" || item?.type === "disliked") {
+      return "/account/my-listings";
+    }
+    return null;
+  };
+
+  const handleNotificationClick = (item: NonNullable<typeof notifications>[number]) => {
+    const href = getNotificationHref(item);
+    if (!href) return;
+    router.push(href);
+  };
+
   const uploadProfileImage = async (): Promise<Id<"_storage"> | undefined> => {
     if (!imageFile) return undefined;
     const postUrl = await generateUploadUrl();
@@ -218,12 +235,14 @@ export default function AccountPage() {
                 </p>
               ) : (
                 visibleNotifications.map((item) => (
-                  <div
+                  <button
+                    type="button"
                     key={item._id}
-                    className={`rounded-md border p-2 text-sm ${item.read ? "bg-muted/20" : "bg-primary/10"}`}
+                    onClick={() => handleNotificationClick(item)}
+                    className={`w-full rounded-md border p-2 text-left text-sm hover:bg-muted/40 ${item.read ? "bg-muted/20" : "bg-primary/10"}`}
                   >
                     {item.text}
-                  </div>
+                  </button>
                 ))
               )}
             </div>
@@ -250,4 +269,10 @@ export default function AccountPage() {
     </div>
   );
 }
+
+
+
+
+
+
 
