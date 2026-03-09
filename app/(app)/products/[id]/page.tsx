@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import {
   notFound,
   usePathname,
@@ -59,6 +60,13 @@ export default function ProductDetailsPage({
 
   const me = useQuery(api.users.me, {});
   const listing = useQuery(api.listings.getBySlug, { slug: id });
+  const recommendedListings = useQuery(api.listings.listPublic, {
+    categoryId: listing?.categoryId ?? "__none__",
+  });
+
+  const recommendedItems = (recommendedListings ?? [])
+    .filter((item) => item.slug !== id)
+    .slice(0, 10);
   const swipe = useMutation(api.listings.swipe);
   const createOffer = useMutation(api.offers.create);
   const startConversation = useMutation(api.messages.startConversation);
@@ -290,7 +298,7 @@ export default function ProductDetailsPage({
   const dislikeCount = listing.dislikeCount ?? 0;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 py-12">
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Images */}
         <Card>
@@ -301,7 +309,7 @@ export default function ProductDetailsPage({
                   src={listing.images?.[selectedImageIndex] || fallbackImage}
                   alt={listing.title}
                   fill
-                  className="object-cover"
+                  className="object-cover rounded-t-xl"
                 />
               </div>
 
@@ -368,8 +376,8 @@ export default function ProductDetailsPage({
 
         {/* Product Info */}
         <div className="space-y-6">
-          <Card>
-            <CardHeader>
+          <Card className="border-primary/20">
+            <CardHeader className="bg-primary/5 rounded-t-xl">
               <div className="flex items-start justify-between">
                 <div className="min-w-0 space-y-2">
                   <CardTitle className="break-words text-xl">
@@ -379,10 +387,12 @@ export default function ProductDetailsPage({
                     {formatEgp(listing.priceEgp)}
                   </p>
                   <div className="flex items-center gap-2">
-                    <Badge variant="outline">
+                    <Badge className="border-accent bg-accent text-accent-foreground">
                       {categoryNameById(listing.categoryId)}
                     </Badge>
-                    <Badge variant="outline">{listing.condition}</Badge>
+                    <Badge className="border-secondary bg-secondary text-secondary-foreground">
+                      {listing.condition}
+                    </Badge>
                   </div>
 
                   <div className="flex items-center gap-4 text-sm text-muted-foreground">
@@ -444,8 +454,39 @@ export default function ProductDetailsPage({
             </CardContent>
           </Card>
 
+          <Card className="border-destructive/25 bg-destructive/5">
+            <CardHeader className="space-y-1">
+              <CardTitle className="flex items-center gap-2 text-lg text-destructive">
+                <ShieldAlert className="h-5 w-5" />
+                Your safety matters to us!
+              </CardTitle>
+              <p className="text-sm text-muted-foreground">
+                Stay safe when meeting buyers and sellers.
+              </p>
+            </CardHeader>
+            <CardContent>
+              <ul className="list-disc space-y-2 pl-5 text-sm text-muted-foreground marker:text-destructive">
+                <li>
+                  Only meet in public / crowded places for example metro
+                  stations and malls.
+                </li>
+                <li>
+                  Never go alone to meet a buyer / seller, always take someone
+                  with you.
+                </li>
+                <li>
+                  Check and inspect the product properly before purchasing it.
+                </li>
+                <li>
+                  Never pay anything in advance or transfer money before
+                  inspecting the product.
+                </li>
+              </ul>
+            </CardContent>
+          </Card>
+
           {/* Seller Info */}
-          <Card>
+          <Card className="border-primary/20 bg-primary/5">
             <CardHeader>
               <CardTitle className="text-lg">Seller Information</CardTitle>
             </CardHeader>
@@ -464,12 +505,6 @@ export default function ProductDetailsPage({
                   <p className="font-medium">{listing.ownerName}</p>
                 </div>
               </div>
-            </CardContent>
-          </Card>
-
-          {/* Actions */}
-          <Card>
-            <CardContent className="space-y-3 pt-6">
               {isOwner ? (
                 <>
                   <Button
@@ -487,23 +522,24 @@ export default function ProductDetailsPage({
                 </>
               ) : (
                 <>
-                  <Button
-                    className="w-full"
-                    onClick={handleContactSeller}
-                    disabled={!isAuthenticated}
-                  >
-                    <MessageCircle size={16} className="mr-2" />
-                    Contact Seller
-                  </Button>
+                  <div className=" w-full flex justify-center items-center gap-3">
+                    <Button
+                      className="w-full flex-1"
+                      onClick={handleContactSeller}
+                      disabled={!isAuthenticated}
+                    >
+                      Contact Seller
+                    </Button>
 
-                  <Button
-                    variant="outline"
-                    className="w-full"
-                    onClick={openOfferDialog}
-                    disabled={!isAuthenticated}
-                  >
-                    Make an Offer
-                  </Button>
+                    <Button
+                      variant="outline"
+                      className="w-full flex-1"
+                      onClick={openOfferDialog}
+                      disabled={!isAuthenticated}
+                    >
+                      Make an Offer
+                    </Button>
+                  </div>
 
                   {!isAuthenticated && (
                     <p className="text-center text-sm text-muted-foreground">
@@ -516,6 +552,51 @@ export default function ProductDetailsPage({
           </Card>
         </div>
       </div>
+
+      {listing && recommendedItems.length > 0 && (
+        <section className="mt-8 space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className="text-xl font-semibold">More For You</h3>
+            <Badge variant="outline">{recommendedItems.length} items</Badge>
+          </div>
+
+          <div className="-mx-4 overflow-x-auto px-4 pb-2">
+            <div className="flex snap-x snap-mandatory gap-4">
+              {recommendedItems.map((product) => (
+                <Link
+                  key={product._id}
+                  href={`/products/${product.slug}`}
+                  className="block w-[260px] shrink-0 snap-start sm:w-[300px] lg:w-[320px]"
+                >
+                  <article className="overflow-hidden rounded-xl border bg-card transition hover:shadow-md">
+                    <Image
+                      src={product.images?.[0] || fallbackImage}
+                      alt={product.title}
+                      width={600}
+                      height={400}
+                      className="h-40 w-full object-cover"
+                    />
+                    <div className="space-y-1 p-3">
+                      <p className="text-xs text-muted-foreground">
+                        {product.location}
+                      </p>
+                      <h4 className="line-clamp-2 font-semibold">
+                        {product.title}
+                      </h4>
+                      <p className="line-clamp-1 text-sm text-muted-foreground">
+                        {product.summary}
+                      </p>
+                      <p className="pt-1 text-lg font-bold text-primary">
+                        {formatEgp(product.priceEgp)}
+                      </p>
+                    </div>
+                  </article>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
       <Dialog open={manageOpen} onOpenChange={setManageOpen}>
         <DialogContent>
           <DialogHeader>
