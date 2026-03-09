@@ -248,7 +248,6 @@ export default function Home() {
     router.push("/signin?next=" + encodeURIComponent(getNextUrl()));
   };
 
-
   const listings =
     useQuery(api.listings.listPublic, {
       search: searchTerm || undefined,
@@ -358,7 +357,11 @@ export default function Home() {
           <CardContent className="flex flex-wrap items-center justify-between gap-3 p-3 md:p-4">
             <p className="text-sm">{authPrompt}</p>
             {!isAuthenticated && (
-              <Button size="sm" type="button" onClick={() => redirectToSignIn()}>
+              <Button
+                size="sm"
+                type="button"
+                onClick={() => redirectToSignIn()}
+              >
                 Go to sign in
               </Button>
             )}
@@ -386,7 +389,7 @@ export default function Home() {
                 if you don't want to you don't have to
               </h2>
               <p className="mt-2 max-w-xl text-sm text-white/85 md:text-base">
-                you don't have to keep swapping move to the browse tap and
+                you don't have to keep swipping move to the browse tap and
                 search for what exactly you want
               </p>
             </div>
@@ -800,4 +803,3 @@ export default function Home() {
     </>
   );
 }
-
