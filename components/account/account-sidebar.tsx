@@ -43,7 +43,6 @@ export default function AccountSidebar() {
       <div className="flex flex-col items-center gap-2 border-b pb-4 text-center">
         <div className="grid h-16 w-16 place-items-center overflow-hidden rounded-full bg-primary/10 text-xl font-bold text-primary sm:h-20 sm:w-20 sm:text-2xl">
           {me?.image ? (
-            // eslint-disable-next-line @next/next/no-img-element
             <img
               src={me.image}
               alt={me.name ?? "Profile"}
