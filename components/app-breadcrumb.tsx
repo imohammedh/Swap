@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -19,6 +19,24 @@ const routeLabels: Record<string, string> = {
 
 const nonNavigableCrumbs = new Set(["products"]);
 
+function formatDynamicSegmentLabel({
+  segment,
+  parentSegment,
+}: {
+  segment: string;
+  parentSegment?: string;
+}) {
+  const decoded = decodeURIComponent(segment);
+
+  // Product details routes look like: /products/<title>-<id>
+  if (parentSegment === "products") {
+    const withoutId = decoded.replace(/-\d+$/, "");
+    return withoutId.replace(/-/g, " ");
+  }
+
+  return decoded;
+}
+
 type AppBreadcrumbProps = {
   tailLabel?: string;
   showHome?: boolean;
@@ -38,7 +56,12 @@ export default function AppBreadcrumb({
 
   const crumbs = segments.map((segment, index) => {
     const href = `/${segments.slice(0, index + 1).join("/")}`;
-    const baseLabel = routeLabels[segment] ?? decodeURIComponent(segment);
+    const baseLabel =
+      routeLabels[segment] ??
+      formatDynamicSegmentLabel({
+        segment,
+        parentSegment: segments[index - 1],
+      });
     const label =
       tailLabel && index === segments.length - 1 ? tailLabel : baseLabel;
     return { href, label, segment };
@@ -64,9 +87,7 @@ export default function AppBreadcrumb({
                   {crumb.label}
                 </Link>
               ) : (
-                <span className="font-semibold text-foreground">
-                  {crumb.label}
-                </span>
+                <span className="font-semibold text-foreground">{crumb.label}</span>
               )}
             </span>
           );
