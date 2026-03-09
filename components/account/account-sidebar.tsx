@@ -56,9 +56,7 @@ export default function AccountSidebar() {
         <p className="max-w-full truncate px-2 text-base font-bold sm:text-lg">
           {me?.name ?? "Your account"}
         </p>
-        <p className="flex items-center gap-1 text-xs text-muted-foreground">
-          <BadgeDollarSign size={14} /> 0.0 | 0 Ratings
-        </p>
+        <p className="flex items-center gap-1 text-xs text-muted-foreground"></p>
         <Link href="/account/settings" className="w-full sm:w-auto">
           <Button variant="outline" size="sm" className="w-full sm:w-auto">
             Manage Account
