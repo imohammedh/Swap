@@ -4,6 +4,11 @@ import { v } from "convex/values";
 import type { Doc, Id } from "./_generated/dataModel";
 import { mutation, query } from "./_generated/server";
 
+function toNotificationPreview(text: string, maxChars = 140) {
+  const normalized = text.replace(/\s+/g, " ").trim();
+  if (normalized.length <= maxChars) return normalized;
+  return normalized.slice(0, Math.max(0, maxChars - 1)).trimEnd() + "...";
+}
 function isParticipant(
   conversation: Doc<"conversations">,
   userId: Id<"users">,
@@ -50,6 +55,7 @@ export const startConversation = mutation({
     if (!conversation) throw new Error("Failed to create conversation.");
 
     if (initialMessage) {
+      const preview = toNotificationPreview(initialMessage);
       await ctx.db.insert("messages", {
         conversationId: conversation._id,
         senderId: userId,
@@ -73,7 +79,7 @@ export const startConversation = mutation({
         listingId: conversation.listingId,
         conversationId: conversation._id,
         type: "message",
-        text: `${senderLabel} sent you a message about: ${listing.title}`,
+        text: `${senderLabel}: ${preview} - ${listing.title}`,
         read: false,
       });
     }
@@ -215,6 +221,7 @@ export const sendMessage = mutation({
     if (!body) throw new Error("Message cannot be empty.");
 
     const now = Date.now();
+    const preview = toNotificationPreview(body);
     const messageId = await ctx.db.insert("messages", {
       conversationId: args.conversationId,
       senderId: userId,
@@ -246,8 +253,8 @@ export const sendMessage = mutation({
       conversationId: args.conversationId,
       type: "message",
       text: listing
-        ? `${senderLabel} sent you a message about: ${listing.title}`
-        : `${senderLabel} sent you a message`,
+        ? `${senderLabel}: ${preview} - ${listing.title}`
+        : `${senderLabel}: ${preview}`,
       read: false,
     });
     return { messageId };
@@ -290,6 +297,8 @@ export const markConversationRead = mutation({
     return { updated: unread.length };
   },
 });
+
+
 
 
 
