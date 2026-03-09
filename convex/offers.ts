@@ -1,4 +1,4 @@
-﻿import { getAuthUserId } from "@convex-dev/auth/server";
+import { getAuthUserId } from "@convex-dev/auth/server";
 import { v } from "convex/values";
 
 import { mutation, query } from "./_generated/server";
@@ -133,9 +133,37 @@ export const updateStatus = mutation({
     const offer = await ctx.db.get(args.offerId);
     if (!offer) throw new Error("Offer not found.");
     if (offer.sellerId !== sellerId) throw new Error("Unauthorized.");
+    if (offer.status === args.status) {
+      return { ok: true, skipped: true };
+    }
 
     await ctx.db.patch(args.offerId, { status: args.status });
-    return { ok: true };
+
+    const [seller, listing] = await Promise.all([
+      ctx.db.get(sellerId),
+      ctx.db.get(offer.listingId),
+    ]);
+
+    const sellerEmail = seller?.email ?? "unknown email";
+    const sellerLabel = seller?.name
+      ? `${seller.name} (${sellerEmail})`
+      : sellerEmail;
+
+    const listingLabel = listing?.title
+      ? `your offer on: ${listing.title}`
+      : "your offer";
+
+    await ctx.db.insert("notifications", {
+      userId: offer.buyerId,
+      actorId: sellerId,
+      listingId: offer.listingId,
+      offerId: offer._id,
+      type: "offer_pending",
+      text: `${sellerLabel} ${args.status} ${listingLabel} (EGP ${offer.amountEgp})`,
+      read: false,
+    });
+
+    return { ok: true, skipped: false };
   },
 });
 

@@ -5,7 +5,6 @@ import { usePathname } from "next/navigation";
 import { useQuery } from "convex/react";
 import {
   BadgeDollarSign,
-  Book,
   Heart,
   MessageSquare,
   Settings,
@@ -76,10 +75,10 @@ export default function AccountSidebar() {
               key={item.href}
               href={item.href}
               className={cn(
-                "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition",
+                "flex items-center gap-3 rounded-md border-l-2 px-3 py-2 text-sm font-medium transition-all duration-150",
                 active
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                  ? "border-l-primary bg-primary text-primary-foreground shadow-sm"
+                  : "border-l-transparent text-muted-foreground hover:border-l-primary/70 hover:bg-primary/10 hover:text-foreground hover:translate-x-0.5",
               )}
             >
               <Icon size={16} />
