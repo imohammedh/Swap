@@ -354,8 +354,10 @@ export default function ProductDetailsPage({
           <Card>
             <CardHeader>
               <div className="flex items-start justify-between">
-                <div className="space-y-2">
-                  <CardTitle className="text-xl">{listing.title}</CardTitle>
+                <div className="min-w-0 space-y-2">
+                  <CardTitle className="break-words text-xl">
+                    {listing.title}
+                  </CardTitle>
                   <p className="text-2xl font-bold text-primary">
                     {formatEgp(listing.priceEgp)}
                   </p>
@@ -406,13 +408,13 @@ export default function ProductDetailsPage({
                 </div>
             </CardHeader>
             <CardContent className="space-y-4">
-              <p className="text-muted-foreground">{listing.description}</p>
+              <p className="max-w-full whitespace-pre-wrap break-words text-muted-foreground">{listing.description}</p>
 
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
                   <ShieldAlert size={16} className="text-muted-foreground" />
-                  <span className="text-sm text-muted-foreground">
-                    Verified seller â€¢ {listing.location}
+                  <span className="max-w-full break-words text-sm text-muted-foreground">
+                    Verified seller • {listing.location}
                   </span>
                 </div>
                 </div>
@@ -547,7 +549,7 @@ export default function ProductDetailsPage({
                 placeholder={String(listing.priceEgp)}
                 disabled={offerSubmitting}
               />
-              <span className="text-sm text-muted-foreground">EGP</span>
+              <span className="max-w-full break-words text-sm text-muted-foreground">EGP</span>
             </div>
 
             {Number(offerAmountInput) > 0 &&
