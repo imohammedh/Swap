@@ -1,7 +1,12 @@
 ﻿"use client";
 
 import Image from "next/image";
-import { notFound, usePathname, useRouter, useSearchParams } from "next/navigation";
+import {
+  notFound,
+  usePathname,
+  useRouter,
+  useSearchParams,
+} from "next/navigation";
 import { use, useEffect, useState } from "react";
 import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import {
@@ -75,10 +80,11 @@ export default function ProductDetailsPage({
   const [startingConversation, setStartingConversation] = useState(false);
   const [manageOpen, setManageOpen] = useState(false);
   const [deletingListing, setDeletingListing] = useState(false);
+  const [redirectingHome, setRedirectingHome] = useState(false);
 
   useEffect(() => {
-    if (listing === null) notFound();
-  }, [listing]);
+    if (listing === null && !redirectingHome) notFound();
+  }, [listing, redirectingHome]);
 
   const handleImageSwipe = (direction: "left" | "right") => {
     if (!listing?.images?.length) return;
@@ -110,6 +116,7 @@ export default function ProductDetailsPage({
     try {
       await swipe({ listingId: listing._id, direction });
     } catch (error) {
+      setRedirectingHome(false);
       toast({
         variant: "destructive",
         title: "Something went wrong",
@@ -138,11 +145,14 @@ export default function ProductDetailsPage({
       });
       router.push(`/account/messages?id=${conversationId}`);
     } catch (error) {
+      setRedirectingHome(false);
       toast({
         variant: "destructive",
         title: "Couldn't open chat",
         description:
-          error instanceof Error ? error.message : "Failed to start conversation",
+          error instanceof Error
+            ? error.message
+            : "Failed to start conversation",
       });
     }
   };
@@ -188,6 +198,7 @@ export default function ProductDetailsPage({
       setOfferOpen(false);
       setOfferSuccessOpen(true);
     } catch (error) {
+      setRedirectingHome(false);
       toast({
         variant: "destructive",
         title: "Offer failed",
@@ -220,11 +231,14 @@ export default function ProductDetailsPage({
       setOfferSuccessOpen(false);
       router.push(`/account/messages?id=${conversationId}`);
     } catch (error) {
+      setRedirectingHome(false);
       toast({
         variant: "destructive",
         title: "Couldn't open chat",
         description:
-          error instanceof Error ? error.message : "Failed to start conversation",
+          error instanceof Error
+            ? error.message
+            : "Failed to start conversation",
       });
     } finally {
       setStartingConversation(false);
@@ -242,16 +256,19 @@ export default function ProductDetailsPage({
     }
 
     setDeletingListing(true);
+    setRedirectingHome(true);
     try {
       await removeListing({ listingId: listing._id });
       toast({ title: "Listing deleted" });
       setManageOpen(false);
-      router.push("/account/my-listings");
+      router.replace("/");
     } catch (error) {
+      setRedirectingHome(false);
       toast({
         variant: "destructive",
         title: "Delete failed",
-        description: error instanceof Error ? error.message : "Failed to delete listing",
+        description:
+          error instanceof Error ? error.message : "Failed to delete listing",
       });
     } finally {
       setDeletingListing(false);
@@ -265,7 +282,7 @@ export default function ProductDetailsPage({
           <div className="mb-4 h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
           <p className="text-muted-foreground">Loading...</p>
         </div>
-                </div>
+      </div>
     );
   }
 
@@ -391,7 +408,9 @@ export default function ProductDetailsPage({
                         onClick={() => handleSwipe("like")}
                       >
                         <Heart size={16} />
-                        <span className="text-xs tabular-nums">{likeCount}</span>
+                        <span className="text-xs tabular-nums">
+                          {likeCount}
+                        </span>
                       </Button>
                       <Button
                         variant="outline"
@@ -400,15 +419,19 @@ export default function ProductDetailsPage({
                         onClick={() => handleSwipe("dislike")}
                       >
                         <X size={16} />
-                        <span className="text-xs tabular-nums">{dislikeCount}</span>
+                        <span className="text-xs tabular-nums">
+                          {dislikeCount}
+                        </span>
                       </Button>
                     </>
                   )}
                 </div>
-                </div>
+              </div>
             </CardHeader>
             <CardContent className="space-y-4">
-              <p className="max-w-full whitespace-pre-wrap break-words text-muted-foreground">{listing.description}</p>
+              <p className="max-w-full whitespace-pre-wrap break-words text-muted-foreground">
+                {listing.description}
+              </p>
 
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
@@ -417,7 +440,7 @@ export default function ProductDetailsPage({
                     Verified seller • {listing.location}
                   </span>
                 </div>
-                </div>
+              </div>
             </CardContent>
           </Card>
 
@@ -439,10 +462,6 @@ export default function ProductDetailsPage({
                 </Avatar>
                 <div>
                   <p className="font-medium">{listing.ownerName}</p>
-                  <div className="flex items-center gap-1">
-                    <Star size={14} className="fill-yellow-400 text-yellow-400" />
-                    <span className="text-sm">0.0 (0 reviews)</span>
-                  </div>
                 </div>
               </div>
             </CardContent>
@@ -496,7 +515,7 @@ export default function ProductDetailsPage({
             </CardContent>
           </Card>
         </div>
-                </div>
+      </div>
       <Dialog open={manageOpen} onOpenChange={setManageOpen}>
         <DialogContent>
           <DialogHeader>
@@ -508,11 +527,17 @@ export default function ProductDetailsPage({
 
           <div className="rounded-lg border bg-muted/20 p-3 text-sm">
             <p className="font-medium">{listing.title}</p>
-            <p className="text-muted-foreground">{formatEgp(listing.priceEgp)}</p>
+            <p className="text-muted-foreground">
+              {formatEgp(listing.priceEgp)}
+            </p>
           </div>
 
           <DialogFooter className="sm:justify-between">
-            <Button type="button" variant="outline" onClick={() => setManageOpen(false)}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setManageOpen(false)}
+            >
               Cancel
             </Button>
             <Button
@@ -549,7 +574,9 @@ export default function ProductDetailsPage({
                 placeholder={String(listing.priceEgp)}
                 disabled={offerSubmitting}
               />
-              <span className="max-w-full break-words text-sm text-muted-foreground">EGP</span>
+              <span className="max-w-full break-words text-sm text-muted-foreground">
+                EGP
+              </span>
             </div>
 
             {Number(offerAmountInput) > 0 &&
@@ -587,7 +614,7 @@ export default function ProductDetailsPage({
               <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary">
                 <Check size={28} />
               </div>
-                </div>
+            </div>
             <DialogTitle className="text-center">
               Your offer has been submitted successfully!
             </DialogTitle>
@@ -618,4 +645,3 @@ export default function ProductDetailsPage({
     </div>
   );
 }
-
