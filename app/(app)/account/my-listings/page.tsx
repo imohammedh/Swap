@@ -21,9 +21,9 @@ export default function MyListingsPage() {
   if (!isAuthenticated) {
     return (
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
+        <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <CardTitle>My Listings</CardTitle>
-          <Button onClick={() => router.push("/signin")}>Sign in</Button>
+          <Button onClick={() => router.push("/signin")} className="w-full sm:w-auto">Sign in</Button>
         </CardHeader>
         <CardContent>
           <div className="grid min-h-[420px] place-items-center rounded-lg border bg-muted/20 text-center">
@@ -42,7 +42,7 @@ export default function MyListingsPage() {
   if (!listings) {
     return (
       <div className="grid min-h-[420px] place-items-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-primary"></div>
       </div>
     );
   }
@@ -60,7 +60,7 @@ export default function MyListingsPage() {
               <p className="text-sm text-muted-foreground">
                 Create your first listing to get started.
               </p>
-              <Button onClick={() => router.push("/onboarding/listing")}>
+              <Button onClick={() => router.push("/onboarding/listing")} className="w-full sm:w-auto">
                 Create Listing
               </Button>
             </div>
@@ -72,14 +72,14 @@ export default function MyListingsPage() {
 
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
+      <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <CardTitle>My Listings ({listings.length})</CardTitle>
-        <Button onClick={() => router.push("/onboarding/listing")}>
+        <Button onClick={() => router.push("/onboarding/listing")} className="w-full sm:w-auto">
           Create Listing
         </Button>
       </CardHeader>
       <CardContent>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {listings.map((listing) => (
             <Link key={listing._id} href={`/products/${listing.slug}`}>
               <Card className="overflow-hidden transition hover:shadow-md">
@@ -95,11 +95,11 @@ export default function MyListingsPage() {
                   />
                 </div>
                 <CardContent className="p-4">
-                  <h3 className="font-semibold line-clamp-1">{listing.title}</h3>
-                  <p className="text-lg font-bold text-primary mt-2">
+                  <h3 className="line-clamp-1 font-semibold">{listing.title}</h3>
+                  <p className="mt-2 text-lg font-bold text-primary">
                     {formatEgp(listing.priceEgp)}
                   </p>
-                  <p className="text-sm text-muted-foreground mt-1">
+                  <p className="mt-1 line-clamp-1 text-sm text-muted-foreground">
                     {listing.location}
                   </p>
                 </CardContent>

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { Megaphone, Pencil } from "lucide-react";
@@ -122,7 +122,7 @@ export default function AccountPage() {
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <CardTitle>Profile Information</CardTitle>
             <Button
               variant="outline"
@@ -136,7 +136,7 @@ export default function AccountPage() {
         </CardHeader>
         <CardContent>
           {editing ? (
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-4 min-w-0">
               <div>
                 <label className="mb-2 block text-sm font-medium">Name</label>
                 <Input
@@ -168,8 +168,8 @@ export default function AccountPage() {
               </Button>
             </form>
           ) : (
-            <div className="space-y-4">
-              <div className="flex items-center gap-4">
+            <div className="space-y-4 min-w-0">
+              <div className="flex min-w-0 items-center gap-3">
                 <Avatar className="h-16 w-16">
                   <AvatarImage src={me?.image ?? undefined} alt={me?.name ?? "User"} />
                   <AvatarFallback className="bg-primary/10 text-primary text-lg font-bold">
@@ -177,13 +177,13 @@ export default function AccountPage() {
                   </AvatarFallback>
                 </Avatar>
                 <div>
-                  <p className="font-medium">{me?.name || "No name set"}</p>
-                  <p className="text-sm text-muted-foreground">{me?.email}</p>
+                  <p className="truncate font-medium">{me?.name || "No name set"}</p>
+                  <p className="truncate text-sm text-muted-foreground">{me?.email}</p>
                 </div>
               </div>
               <div className="space-y-2">
                 <div>
-                  <span className="font-medium">Phone: </span>
+                  <span className="truncate font-medium">Phone: </span>
                   <span className="text-muted-foreground">
                     {me?.phone || "Not set"}
                   </span>
@@ -203,8 +203,8 @@ export default function AccountPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="mb-2 flex items-center justify-between">
-              <p className="text-sm text-muted-foreground">
+            <div className="mb-2 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <p className="truncate text-sm text-muted-foreground">
                 Your latest updates
               </p>
               <label className="flex cursor-pointer select-none items-center gap-2 text-xs text-muted-foreground">
@@ -269,6 +269,7 @@ export default function AccountPage() {
     </div>
   );
 }
+
 
 
 

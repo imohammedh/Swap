@@ -21,7 +21,6 @@ const navItems = [
   { href: "/account/messages", label: "Messages", icon: MessageSquare },
   { href: "/account/my-listings", label: "My Listings", icon: ShoppingBag },
   { href: "/account/favorites", label: "Favorites", icon: Heart },
-  // { href: "/account/blog", label: "Blog", icon: Book },
   { href: "/account/settings", label: "Settings", icon: Settings },
 ];
 
@@ -40,9 +39,9 @@ export default function AccountSidebar() {
   const me = useQuery(api.users.me, {});
 
   return (
-    <aside className="space-y-4 rounded-xl border bg-card p-4">
+    <aside className="space-y-4 rounded-xl border bg-card p-3 sm:p-4">
       <div className="flex flex-col items-center gap-2 border-b pb-4 text-center">
-        <div className="grid h-20 w-20 place-items-center overflow-hidden rounded-full bg-primary/10 text-2xl font-bold text-primary">
+        <div className="grid h-16 w-16 place-items-center overflow-hidden rounded-full bg-primary/10 text-xl font-bold text-primary sm:h-20 sm:w-20 sm:text-2xl">
           {me?.image ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -54,12 +53,14 @@ export default function AccountSidebar() {
             initials(me?.name)
           )}
         </div>
-        <p className="text-lg font-bold">{me?.name ?? "Your account"}</p>
+        <p className="max-w-full truncate px-2 text-base font-bold sm:text-lg">
+          {me?.name ?? "Your account"}
+        </p>
         <p className="flex items-center gap-1 text-xs text-muted-foreground">
           <BadgeDollarSign size={14} /> 0.0 | 0 Ratings
         </p>
-        <Link href="/account/settings">
-          <Button variant="outline" size="sm">
+        <Link href="/account/settings" className="w-full sm:w-auto">
+          <Button variant="outline" size="sm" className="w-full sm:w-auto">
             Manage Account
           </Button>
         </Link>
@@ -75,10 +76,10 @@ export default function AccountSidebar() {
               key={item.href}
               href={item.href}
               className={cn(
-                "flex items-center gap-3 rounded-md border-l-2 px-3 py-2 text-sm font-medium transition-all duration-150",
+                "flex items-center gap-3 rounded-md border-l-2 px-3 py-2.5 text-sm font-medium transition-all duration-150",
                 active
                   ? "border-l-primary bg-primary text-primary-foreground shadow-sm"
-                  : "border-l-transparent text-muted-foreground hover:border-l-primary/70 hover:bg-primary/10 hover:text-foreground hover:translate-x-0.5",
+                  : "border-l-transparent text-muted-foreground hover:border-l-primary/70 hover:bg-primary/10 hover:text-foreground",
               )}
             >
               <Icon size={16} />

@@ -55,7 +55,6 @@ const mobileMenuItems = [
   { href: "/account/messages", label: "Messages", icon: Bell },
   { href: "/account/my-listings", label: "My Listings", icon: ShoppingBag },
   { href: "/account/favorites", label: "Favorites", icon: Heart },
-  { href: "/account/blog", label: "Blog", icon: Book },
   { href: "/account/settings", label: "Settings", icon: Settings },
 ];
 
@@ -92,7 +91,9 @@ export default function SharedHeader() {
   const visibleNotifications =
     notifications?.filter((n) => (unreadOnly ? !n.read : true)) ?? [];
 
-  const getNotificationHref = (item: NonNullable<typeof notifications>[number]) => {
+  const getNotificationHref = (
+    item: NonNullable<typeof notifications>[number],
+  ) => {
     if (item?.type === "message" && item?.conversationId) {
       return `/account/messages?id=${item.conversationId}`;
     }
@@ -103,13 +104,14 @@ export default function SharedHeader() {
     return null;
   };
 
-  const handleNotificationClick = (item: NonNullable<typeof notifications>[number]) => {
+  const handleNotificationClick = (
+    item: NonNullable<typeof notifications>[number],
+  ) => {
     const href = getNotificationHref(item);
     if (!href) return;
     setNotifOpen(false);
     router.push(href);
   };
-
 
   // Close notification panel on outside click
   useEffect(() => {
@@ -153,10 +155,7 @@ export default function SharedHeader() {
           <Image src={SwapLogo} width={40} height={40} alt="Swap logo" />
         </Link>
 
-        <form
-          onSubmit={handleSearchSubmit}
-          className="relative min-w-[220px] flex-1"
-        >
+        <form onSubmit={handleSearchSubmit} className="relative flex-1">
           <Search
             size={18}
             className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
@@ -283,9 +282,6 @@ export default function SharedHeader() {
                   <p className="truncate font-semibold">
                     {me?.name ?? "Your account"}
                   </p>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    0.0 Â· 0 Ratings
-                  </p>
                 </div>
               </div>
             </DropdownMenuLabel>
@@ -347,7 +343,6 @@ export default function SharedHeader() {
           </DropdownMenuContent>
         </DropdownMenu>
 
-        {/* â”€â”€ Notification panel â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
         {notifOpen && (
           <div
             ref={notifPanelRef}
@@ -398,5 +393,3 @@ export default function SharedHeader() {
     </header>
   );
 }
-
-

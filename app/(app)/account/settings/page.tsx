@@ -2,7 +2,6 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import { useMutation, useQuery } from "convex/react";
-import { useRouter } from "next/navigation";
 import type { Id } from "@/convex/_generated/dataModel";
 
 import { api } from "@/convex/_generated/api";
@@ -11,7 +10,6 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
 export default function SettingsPage() {
-  const router = useRouter();
   const me = useQuery(api.users.me, {});
   const updateProfile = useMutation(api.users.updateProfile);
   const generateUploadUrl = useMutation(api.files.generateUploadUrl);
@@ -108,7 +106,7 @@ export default function SettingsPage() {
               onChange={(e) => setImageFile(e.target.files?.[0] ?? null)}
             />
           </div>
-          <Button type="submit" disabled={saving}>
+          <Button type="submit" disabled={saving} className="w-full sm:w-auto">
             {saving ? "Saving..." : "Save Changes"}
           </Button>
         </form>

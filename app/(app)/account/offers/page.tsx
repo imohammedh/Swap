@@ -91,9 +91,9 @@ export default function OffersPage() {
   return (
     <div className="space-y-4">
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
+        <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <CardTitle>Offers</CardTitle>
-          <div className="relative w-full max-w-sm">
+          <div className="relative w-full sm:max-w-sm">
             <Search
               className="pointer-events-none absolute left-3 top-3 text-muted-foreground"
               size={14}
@@ -107,7 +107,7 @@ export default function OffersPage() {
           </div>
         </CardHeader>
         <CardContent className="grid gap-4 lg:grid-cols-[320px_1fr]">
-          <div className="space-y-3 rounded-lg border bg-muted/20 p-4">
+          <div className="space-y-3 rounded-lg border bg-muted/20 p-3 sm:p-4">
             <h3 className="font-semibold">Filters</h3>
             <Input
               placeholder="From value (EGP)"
@@ -141,7 +141,7 @@ export default function OffersPage() {
               value={toDate}
               onChange={(event) => setToDate(event.target.value)}
             />
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               <Button variant="outline" onClick={clearFilters}>
                 Clear
               </Button>
@@ -173,9 +173,9 @@ export default function OffersPage() {
                           className="object-cover"
                         />
                       </Link>
-                      <div className="space-y-2">
+                      <div className="space-y-2 min-w-0">
                         <div className="flex flex-wrap items-center justify-between gap-2">
-                          <Link href={`/products/${offer.listingSlug}`} className="font-semibold hover:underline">
+                          <Link href={`/products/${offer.listingSlug}`} className="line-clamp-2 font-semibold hover:underline">
                             {offer.listingTitle}
                           </Link>
                           <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${statusBadgeClass[offer.status]}`}>
@@ -184,12 +184,12 @@ export default function OffersPage() {
                         </div>
                         <p className="text-sm text-muted-foreground">From: {offer.buyerName}</p>
                         <p className="text-lg font-bold text-primary">{formatEgp(offer.amountEgp)}</p>
-                        {offer.message && <p className="text-sm text-muted-foreground">&ldquo;{offer.message}&rdquo;</p>}
+                        {offer.message && <p className="text-sm text-muted-foreground break-words">&ldquo;{offer.message}&rdquo;</p>}
                         <p className="text-xs text-muted-foreground">
                           {new Date(offer._creationTime).toLocaleString()}
                         </p>
                         {offer.status === "pending" && (
-                          <div className="flex gap-2">
+                          <div className="flex flex-col gap-2 sm:flex-row">
                             <Button
                               size="sm"
                               onClick={() => void updateStatus({ offerId: offer._id, status: "accepted" })}
