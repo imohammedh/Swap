@@ -1,6 +1,8 @@
-"use client";
+﻿"use client";
 
-import { ChangeEvent, useMemo, useState } from "react";
+import { ChangeEvent, useEffect, useMemo, useState } from "react";
+
+import { z } from "zod";
 import { useMutation } from "convex/react";
 import { useRouter } from "next/navigation";
 import type { Id } from "@/convex/_generated/dataModel";
@@ -17,10 +19,104 @@ import { egyptCities } from "@/lib/egypt-cities";
 
 const steps = ["Category", "Details", "Media & Location", "Review"] as const;
 
+const TITLE_MAX = 40;
+const SUMMARY_MAX = 80;
+const DESCRIPTION_MAX = 4000;
+const MAX_IMAGES = 5;
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024; // 5MB
+
+type FieldErrors = Partial<Record<string, string>>;
+
+function parseZodErrors(error: z.ZodError): FieldErrors {
+  return error.issues.reduce<FieldErrors>((acc, issue) => {
+    const key = (issue.path[0] as string) ?? "form";
+    if (!acc[key]) acc[key] = issue.message;
+    return acc;
+  }, {});
+}
+
+function FieldError({ message }: { message?: string }) {
+  if (!message) return null;
+  return <p className="text-xs text-destructive mt-1">{message}</p>;
+}
+
+const imageFileSchema = z
+  .instanceof(File)
+  .refine((file) => file.type?.startsWith("image/"), {
+    message: "Only image files are allowed.",
+  })
+  .refine((file) => file.size <= MAX_IMAGE_BYTES, {
+    message: "Each image must be 5MB or less.",
+  });
+
+const createListingSchema = z.object({
+  categoryId: z
+    .string()
+    .min(1, "Category is required.")
+    .refine(
+      (value) =>
+        categoryOptions.some(
+          (option) => option.id === value && value !== "all",
+        ),
+      { message: "Select a valid category." },
+    ),
+  title: z
+    .string()
+    .trim()
+    .min(3, "Title must be at least 3 characters.")
+    .max(TITLE_MAX, `Title must be ${TITLE_MAX} characters or less.`),
+  priceEgp: z
+    .number()
+    .refine((value) => Number.isFinite(value), {
+      message: "Price must be a valid number.",
+    })
+    .positive("Price must be greater than 0."),
+  location: z
+    .string()
+    .trim()
+    .min(2, "Location is required.")
+    .refine((value) => egyptCities.includes(value), {
+      message: "Select a valid city.",
+    }),
+  summary: z
+    .string()
+    .trim()
+    .min(1, "Summary is required.")
+    .max(SUMMARY_MAX, `Summary must be ${SUMMARY_MAX} characters or less.`),
+  description: z
+    .string()
+    .trim()
+    .min(1, "Description is required.")
+    .max(DESCRIPTION_MAX, "Description is too long."),
+  paymentType: z.enum(["cash", "swap", "both"]),
+  condition: z.enum(["new", "used"]),
+  images: z
+    .array(imageFileSchema)
+    .max(MAX_IMAGES, `You can upload up to ${MAX_IMAGES} images.`),
+});
+
+const stepSchemas = [
+  createListingSchema.pick({ categoryId: true }),
+  createListingSchema.pick({
+    title: true,
+    priceEgp: true,
+    paymentType: true,
+    condition: true,
+  }),
+  createListingSchema.pick({
+    location: true,
+    summary: true,
+    description: true,
+    images: true,
+  }),
+  createListingSchema,
+] as const;
+
 export default function ListingOnboardingPage() {
   const [step, setStep] = useState(0);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [uploading, setUploading] = useState(false);
 
   const [categoryId, setCategoryId] = useState(
@@ -42,15 +138,77 @@ export default function ListingOnboardingPage() {
   const generateUploadUrl = useMutation(api.files.generateUploadUrl);
   const router = useRouter();
 
-  const parsedPrice = useMemo(() => Number(price || 0), [price]);
+  const parsedPrice = useMemo(() => {
+    if (!price) return NaN;
+    const value = Number(price);
+    return Number.isFinite(value) ? value : NaN;
+  }, [price]);
+
+  useEffect(() => {
+    return () => {
+      for (const url of previews) URL.revokeObjectURL(url);
+    };
+  }, [previews]);
+
+  const clearFieldError = (field: string) => {
+    if (!fieldErrors[field]) return;
+    setFieldErrors((prev) => ({ ...prev, [field]: undefined }));
+  };
+
+  const getFormData = () => ({
+    categoryId,
+    title,
+    priceEgp: parsedPrice,
+    location,
+    summary,
+    description,
+    paymentType,
+    condition,
+    images: files,
+  });
+
+  const validateStep = (targetStep: number): boolean => {
+    const schema = stepSchemas[Math.min(Math.max(targetStep, 0), 3)];
+    const parsed = schema.safeParse(getFormData());
+
+    if (parsed.success) return true;
+
+    setFieldErrors((prev) => ({ ...prev, ...parseZodErrors(parsed.error) }));
+    return false;
+  };
+  const validateField = (
+    field: keyof typeof createListingSchema.shape,
+    value: unknown,
+  ): boolean => {
+    const schema = createListingSchema.shape[field];
+    const parsed = schema.safeParse(value);
+
+    if (parsed.success) {
+      clearFieldError(field);
+      return true;
+    }
+
+    setFieldErrors((prev) => ({
+      ...prev,
+      [field]: parsed.error.issues[0]?.message ?? "Invalid value.",
+    }));
+    return false;
+  };
 
   const canContinue =
     (step === 0 && Boolean(categoryId)) ||
-    (step === 1 && Boolean(title.trim()) && parsedPrice > 0) ||
+    (step === 1 &&
+      title.trim().length >= 3 &&
+      title.trim().length <= TITLE_MAX &&
+      Number.isFinite(parsedPrice) &&
+      parsedPrice > 0) ||
     (step === 2 &&
       Boolean(location.trim()) &&
-      Boolean(summary.trim()) &&
-      Boolean(description.trim()));
+      egyptCities.includes(location) &&
+      summary.trim().length > 0 &&
+      summary.trim().length <= SUMMARY_MAX &&
+      description.trim().length > 0 &&
+      description.trim().length <= DESCRIPTION_MAX);
 
   const uploadSelectedFiles = async (): Promise<Id<"_storage">[]> => {
     if (files.length === 0) return [];
@@ -76,28 +234,35 @@ export default function ListingOnboardingPage() {
 
   const handleCreate = async () => {
     setError(null);
+    setFieldErrors({});
+
+    const parsed = createListingSchema.safeParse(getFormData());
+    if (!parsed.success) {
+      setFieldErrors(parseZodErrors(parsed.error));
+      setError("Please fix the highlighted fields.");
+      return;
+    }
+
     try {
-      if (files.length > 5) {
-        throw new Error("You can upload up to 5 images.");
-      }
+      const validated = parsed.data;
 
       const imageStorageIds = await uploadSelectedFiles();
 
       const created = await createListing({
-        title,
-        categoryId,
-        priceEgp: parsedPrice,
-        location,
-        summary,
-        description,
+        title: validated.title,
+        categoryId: validated.categoryId,
+        priceEgp: validated.priceEgp,
+        location: validated.location,
+        summary: validated.summary,
+        description: validated.description,
         imageUrls: [],
         imageStorageIds,
-        paymentType,
-        condition,
+        paymentType: validated.paymentType,
+        condition: validated.condition,
         features: ["Posted by onboarding"],
         details: [
-          { key: "Condition", value: condition },
-          { key: "Payment", value: paymentType },
+          { key: "Condition", value: validated.condition },
+          { key: "Payment", value: validated.paymentType },
           { key: "Source", value: "User onboarding" },
         ],
       });
@@ -118,6 +283,7 @@ export default function ListingOnboardingPage() {
     if (selected.length === 0) return;
 
     let reachedLimit = false;
+    let rejectedMessage: string | null = null;
 
     setFiles((current) => {
       const next = [...current];
@@ -129,7 +295,14 @@ export default function ListingOnboardingPage() {
         const key = `${file.name}-${file.size}-${file.lastModified}`;
         if (seen.has(key)) continue;
 
-        if (next.length >= 5) {
+        const fileValidation = imageFileSchema.safeParse(file);
+        if (!fileValidation.success) {
+          rejectedMessage =
+            fileValidation.error.issues[0]?.message ?? "Invalid image file.";
+          continue;
+        }
+
+        if (next.length >= MAX_IMAGES) {
           reachedLimit = true;
           break;
         }
@@ -138,14 +311,26 @@ export default function ListingOnboardingPage() {
         seen.add(key);
       }
 
-      // Generate preview URLs for new files
       const newPreviews = next.map((file) => URL.createObjectURL(file));
       setPreviews(newPreviews);
-
       return next;
     });
 
-    setError(reachedLimit ? "Maximum is 5 images." : null);
+    if (reachedLimit) {
+      setFieldErrors((prev) => ({
+        ...prev,
+        images: `You can upload up to ${MAX_IMAGES} images.`,
+      }));
+    } else if (rejectedMessage) {
+      setFieldErrors((prev) => ({
+        ...prev,
+        images: rejectedMessage ?? undefined,
+      }));
+    } else {
+      clearFieldError("images");
+    }
+
+    setError(null);
     event.target.value = "";
   };
 
@@ -156,6 +341,7 @@ export default function ListingOnboardingPage() {
       setPreviews(newPreviews);
       return next;
     });
+    clearFieldError("images");
   };
 
   return (
@@ -193,7 +379,10 @@ export default function ListingOnboardingPage() {
                       <button
                         key={category.id}
                         type="button"
-                        onClick={() => setCategoryId(category.id)}
+                        onClick={() => {
+                          clearFieldError("categoryId");
+                          setCategoryId(category.id);
+                        }}
                         className={`flex items-center gap-2 rounded-lg border p-3 text-left ${
                           categoryId === category.id
                             ? "border-primary bg-primary/10"
@@ -204,22 +393,45 @@ export default function ListingOnboardingPage() {
                       </button>
                     ))}
                 </div>
+                <FieldError message={fieldErrors.categoryId} />
               </div>
             )}
 
             {step === 1 && (
               <div className="space-y-3">
-                <Input
-                  placeholder="Listing title"
-                  value={title}
-                  onChange={(event) => setTitle(event.target.value)}
-                />
-                <Input
-                  placeholder="Price in EGP"
-                  type="number"
-                  value={price}
-                  onChange={(event) => setPrice(event.target.value)}
-                />
+                <div className="space-y-1">
+                  <Input
+                    placeholder="Listing title"
+                    value={title}
+                    maxLength={TITLE_MAX}
+                    onChange={(event) => {
+                      clearFieldError("title");
+                      setTitle(event.target.value);
+                    }}
+                    onBlur={() => validateField("title", title)}
+                  />
+                  <div className="flex items-center justify-between">
+                    <FieldError message={fieldErrors.title} />
+                    <p className="text-xs text-muted-foreground text-right">
+                      {title.length}/{TITLE_MAX}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <Input
+                    placeholder="Price in EGP"
+                    type="number"
+                    value={price}
+                    onChange={(event) => {
+                      clearFieldError("priceEgp");
+                      setPrice(event.target.value);
+                    }}
+                    onBlur={() => validateField("priceEgp", parsedPrice)}
+                  />
+                  <FieldError message={fieldErrors.priceEgp} />
+                </div>
+
                 <div className="grid grid-cols-2 gap-2">
                   <select
                     value={paymentType}
@@ -248,54 +460,78 @@ export default function ListingOnboardingPage() {
 
             {step === 2 && (
               <div className="space-y-3">
-                <select
-                  value={location}
-                  onChange={(e) => setLocation(e.target.value)}
-                  className="h-10 w-full rounded-md border bg-background px-3 text-sm"
-                >
-                  {egyptCities.map((city) => (
-                    <option key={city} value={city}>
-                      {city}
-                    </option>
-                  ))}
-                </select>
+                <div className="space-y-1">
+                  <select
+                    value={location}
+                    onChange={(e) => {
+                      clearFieldError("location");
+                      setLocation(e.target.value);
+                    }}
+                    onBlur={() => validateField("location", location)}
+                    className="h-10 w-full rounded-md border bg-background px-3 text-sm"
+                  >
+                    {egyptCities.map((city) => (
+                      <option key={city} value={city}>
+                        {city}
+                      </option>
+                    ))}
+                  </select>
+                  <FieldError message={fieldErrors.location} />
+                </div>
 
-                <Input
-                  placeholder="Short summary (e.g. iPhone 14 Pro, barely used)"
-                  value={summary}
-                  onChange={(event) => setSummary(event.target.value)}
-                />
+                <div className="space-y-1">
+                  <Input
+                    placeholder="Short summary (e.g. iPhone 14 Pro, barely used)"
+                    value={summary}
+                    maxLength={SUMMARY_MAX}
+                    onChange={(event) => {
+                      clearFieldError("summary");
+                      setSummary(event.target.value);
+                    }}
+                    onBlur={() => validateField("summary", summary)}
+                  />
+                  <div className="flex items-center justify-between">
+                    <FieldError message={fieldErrors.summary} />
+                    <p className="text-xs text-muted-foreground text-right">
+                      {summary.length}/{SUMMARY_MAX}
+                    </p>
+                  </div>
+                </div>
 
                 <div className="space-y-1">
                   <label className="text-sm font-medium">
                     Detailed description
                   </label>
                   <Textarea
-                    placeholder="Describe your item in detail — include condition, age, any defects, reason for selling, accessories included, etc."
+                    placeholder="Describe your item in detail ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â include condition, age, any defects, reason for selling, accessories included, etc."
                     value={description}
-                    onChange={(event: any) =>
-                      setDescription(event.target.value)
-                    }
+                    maxLength={DESCRIPTION_MAX}
+                    onChange={(event: ChangeEvent<HTMLTextAreaElement>) => {
+                      clearFieldError("description");
+                      setDescription(event.target.value);
+                    }}
+                    onBlur={() => validateField("description", description)}
                     rows={6}
                     className="resize-none"
                   />
-                  <p className="text-xs text-muted-foreground text-right">
-                    {description.length} characters
-                  </p>
+                  <div className="flex items-center justify-between">
+                    <FieldError message={fieldErrors.description} />
+                    <p className="text-xs text-muted-foreground text-right">
+                      {description.length}/{DESCRIPTION_MAX}
+                    </p>
+                  </div>
                 </div>
 
                 <div className="space-y-3 rounded-md border p-3">
                   <div className="flex items-center justify-between">
                     <label className="text-sm font-medium">Photos</label>
                     <span className="text-xs text-muted-foreground">
-                      {files.length}/5
+                      {files.length}/{MAX_IMAGES}
                     </span>
                   </div>
 
-                  {/* Image preview grid — mimics the reference UI */}
                   <div className="flex flex-wrap gap-3">
-                    {/* Add photos button */}
-                    {files.length < 5 && (
+                    {files.length < MAX_IMAGES && (
                       <label className="flex h-24 w-24 cursor-pointer flex-col items-center justify-center gap-1 rounded-md border-2 border-dashed border-muted-foreground/40 bg-muted/20 text-muted-foreground hover:border-primary hover:text-primary transition-colors">
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
@@ -322,7 +558,6 @@ export default function ListingOnboardingPage() {
                       </label>
                     )}
 
-                    {/* Preview thumbnails */}
                     {previews.map((src, index) => (
                       <div
                         key={`${files[index]?.name}-${index}`}
@@ -334,13 +569,11 @@ export default function ListingOnboardingPage() {
                           alt={`Preview ${index + 1}`}
                           className="h-full w-full object-cover"
                         />
-                        {/* Cover badge on first image */}
                         {index === 0 && (
                           <span className="absolute bottom-0 left-0 right-0 bg-black/60 py-0.5 text-center text-[10px] font-semibold text-white">
                             Cover
                           </span>
                         )}
-                        {/* Remove button */}
                         <button
                           type="button"
                           onClick={() => removeFile(index)}
@@ -366,8 +599,10 @@ export default function ListingOnboardingPage() {
                   </div>
 
                   <p className="text-xs text-muted-foreground">
-                    First image will be used as the cover. Up to 5 photos.
+                    First image will be used as the cover. Up to {MAX_IMAGES}{" "}
+                    photos. (Max 5MB each)
                   </p>
+                  <FieldError message={fieldErrors.images} />
                 </div>
               </div>
             )}
@@ -382,7 +617,8 @@ export default function ListingOnboardingPage() {
                   <strong>Title:</strong> {title}
                 </p>
                 <p>
-                  <strong>Price:</strong> {parsedPrice} EGP
+                  <strong>Price:</strong>{" "}
+                  {Number.isFinite(parsedPrice) ? parsedPrice : "-"} EGP
                 </p>
                 <p>
                   <strong>Location:</strong> {location}
@@ -445,7 +681,10 @@ export default function ListingOnboardingPage() {
               <Button
                 variant="outline"
                 disabled={step === 0 || submitted || uploading}
-                onClick={() => setStep((value) => Math.max(value - 1, 0))}
+                onClick={() => {
+                  setError(null);
+                  setStep((value) => Math.max(value - 1, 0));
+                }}
               >
                 Back
               </Button>
@@ -453,9 +692,11 @@ export default function ListingOnboardingPage() {
               {step < steps.length - 1 && (
                 <Button
                   disabled={!canContinue || submitted || uploading}
-                  onClick={() =>
-                    setStep((value) => Math.min(value + 1, steps.length - 1))
-                  }
+                  onClick={() => {
+                    setError(null);
+                    if (!validateStep(step)) return;
+                    setStep((value) => Math.min(value + 1, steps.length - 1));
+                  }}
                 >
                   Continue
                 </Button>
