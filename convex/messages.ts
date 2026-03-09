@@ -1,4 +1,4 @@
-import { getAuthUserId } from "@convex-dev/auth/server";
+﻿import { getAuthUserId } from "@convex-dev/auth/server";
 import { v } from "convex/values";
 
 import type { Doc, Id } from "./_generated/dataModel";
@@ -61,6 +61,20 @@ export const startConversation = mutation({
       await ctx.db.patch(conversation._id, {
         lastMessageAt: now,
         lastMessagePreview: initialMessage,
+      });
+
+      const sender = await ctx.db.get(userId);
+      const senderEmail = sender?.email ?? "unknown email";
+      const senderLabel = sender?.name ? `${sender.name} (${senderEmail})` : senderEmail;
+
+      await ctx.db.insert("notifications", {
+        userId: conversation.sellerId,
+        actorId: userId,
+        listingId: conversation.listingId,
+        conversationId: conversation._id,
+        type: "message",
+        text: `${senderLabel} sent you a message about: ${listing.title}`,
+        read: false,
       });
     }
 
@@ -214,6 +228,28 @@ export const sendMessage = mutation({
       lastMessagePreview: body,
     });
 
+    const receiverId =
+      conversation.buyerId === userId
+        ? conversation.sellerId
+        : conversation.buyerId;
+
+    const sender = await ctx.db.get(userId);
+    const senderEmail = sender?.email ?? "unknown email";
+    const senderLabel = sender?.name ? `${sender.name} (${senderEmail})` : senderEmail;
+
+    const listing = await ctx.db.get(conversation.listingId);
+
+    await ctx.db.insert("notifications", {
+      userId: receiverId,
+      actorId: userId,
+      listingId: conversation.listingId,
+      conversationId: args.conversationId,
+      type: "message",
+      text: listing
+        ? `${senderLabel} sent you a message about: ${listing.title}`
+        : `${senderLabel} sent you a message`,
+      read: false,
+    });
     return { messageId };
   },
 });
@@ -254,3 +290,6 @@ export const markConversationRead = mutation({
     return { updated: unread.length };
   },
 });
+
+
+
