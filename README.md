@@ -1,4 +1,6 @@
-﻿# Swap
+﻿![Swap showcase](./showCaseIMage/OG-Image.svg)
+
+# Swap
 
 Swap is a marketplace + social discovery app inspired by swipe UX.
 
