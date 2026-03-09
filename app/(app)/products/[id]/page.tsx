@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Image from "next/image";
 import Link from "next/link";
@@ -301,10 +301,10 @@ export default function ProductDetailsPage({
     <div className="space-y-6 py-12">
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Images */}
-        <Card>
+        <Card className="h-fit">
           <CardContent className="p-0">
             <div className="relative">
-              <div className="aspect-square overflow-hidden">
+              <div className="aspect-square overflow-hidden h-fit">
                 <Image
                   src={listing.images?.[selectedImageIndex] || fallbackImage}
                   alt={listing.title}
@@ -447,7 +447,7 @@ export default function ProductDetailsPage({
                 <div className="flex items-center gap-2">
                   <ShieldAlert size={16} className="text-muted-foreground" />
                   <span className="max-w-full break-words text-sm text-muted-foreground">
-                    Verified seller • {listing.location}
+                    Verified seller - {listing.location}
                   </span>
                 </div>
               </div>
@@ -580,7 +580,7 @@ export default function ProductDetailsPage({
                       <p className="text-xs text-muted-foreground">
                         {product.location}
                       </p>
-                      <h4 className="line-clamp-2 font-semibold">
+                      <h4 className="truncate font-semibold">
                         {product.title}
                       </h4>
                       <p className="line-clamp-1 text-sm text-muted-foreground">

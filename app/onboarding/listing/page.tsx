@@ -503,7 +503,7 @@ export default function ListingOnboardingPage() {
                     Detailed description
                   </label>
                   <Textarea
-                    placeholder="Describe your item in detail ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â include condition, age, any defects, reason for selling, accessories included, etc."
+                    placeholder="Describe your item in detail include condition, age, any defects, reason for selling, accessories included, etc."
                     value={description}
                     maxLength={DESCRIPTION_MAX}
                     onChange={(event: ChangeEvent<HTMLTextAreaElement>) => {

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Image from "next/image";
 import Link from "next/link";
@@ -391,7 +391,7 @@ export default function Home() {
         <>
           <section className="rounded-xl border bg-card p-3 shadow-sm md:p-4">
             <div className="flex items-center gap-2">
-              {/* Left arrow â€” only when scrollable left */}
+              {/* Left arrow — only when scrollable left */}
               {canScrollLeft && (
                 <button
                   type="button"
@@ -404,11 +404,11 @@ export default function Home() {
 
               {/* fade + scrollbar-hidden wrapper */}
               <div className="relative flex-1 overflow-hidden">
-                {/* left fade â€” only when scrollable left */}
+                {/* left fade — only when scrollable left */}
                 {canScrollLeft && (
                   <div className="pointer-events-none absolute left-0 top-0 z-10 h-full w-8 bg-linear-to-r from-card to-transparent" />
                 )}
-                {/* right fade â€” only when scrollable right */}
+                {/* right fade — only when scrollable right */}
                 {canScrollRight && (
                   <div className="pointer-events-none absolute right-0 top-0 z-10 h-full w-8 bg-linear-to-l from-card to-transparent" />
                 )}
@@ -444,7 +444,7 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* Right arrow â€” only when scrollable right */}
+              {/* Right arrow — only when scrollable right */}
               {canScrollRight && (
                 <button
                   type="button"
@@ -520,7 +520,7 @@ export default function Home() {
                       <p className="text-xs text-muted-foreground">
                         {product.location}
                       </p>
-                      <h4 className="line-clamp-2 font-semibold">
+                      <h4 className="truncate font-semibold">
                         {product.title}
                       </h4>
                       <p className="line-clamp-1 text-sm text-muted-foreground">
@@ -571,7 +571,7 @@ export default function Home() {
                         <p className="text-xs text-muted-foreground">
                           {product.location}
                         </p>
-                        <h4 className="line-clamp-2 font-semibold">
+                        <h4 className="truncate font-semibold">
                           {product.title}
                         </h4>
                         <p className="line-clamp-1 text-sm text-muted-foreground">
