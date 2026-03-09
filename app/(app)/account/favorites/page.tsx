@@ -59,7 +59,7 @@ export default function FavoritesPage() {
                   />
                   <div className="space-y-1 p-3">
                     <p className="text-xs text-muted-foreground">{item.location}</p>
-                    <h4 className="line-clamp-2 font-semibold">{item.title}</h4>
+                    <h4 className="truncate font-semibold">{item.title}</h4>
                     <p className="line-clamp-1 text-sm text-muted-foreground">{item.summary}</p>
                     <p className="pt-1 text-lg font-bold text-primary">{formatEgp(item.priceEgp)}</p>
                   </div>

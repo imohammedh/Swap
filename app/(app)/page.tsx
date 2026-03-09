@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Image from "next/image";
 import Link from "next/link";
@@ -621,11 +621,11 @@ export default function Home() {
 
               {/* fade + scrollbar-hidden wrapper */}
               <div className="relative overflow-hidden">
-                {/* left fade â€” only when scrollable left */}
+                {/* left fade — only when scrollable left */}
                 {canScrollLeft && (
                   <div className="pointer-events-none absolute left-0 top-0 z-10 h-full w-10 bg-linear-to-r from-background to-transparent" />
                 )}
-                {/* right fade â€” only when scrollable right */}
+                {/* right fade — only when scrollable right */}
                 {canScrollRight && (
                   <div className="pointer-events-none absolute right-0 top-0 z-10 h-full w-10 bg-linear-to-l from-background to-transparent" />
                 )}
@@ -723,7 +723,7 @@ export default function Home() {
                       <p className="text-xs text-muted-foreground">
                         {product.location}
                       </p>
-                      <h4 className="line-clamp-2 font-semibold">
+                      <h4 className="truncate font-semibold">
                         {product.title}
                       </h4>
                       <p className="line-clamp-1 text-sm text-muted-foreground">
@@ -779,7 +779,7 @@ export default function Home() {
                         <p className="text-xs text-muted-foreground">
                           {product.location}
                         </p>
-                        <h4 className="line-clamp-2 font-semibold">
+                        <h4 className="truncate font-semibold">
                           {product.title}
                         </h4>
                         <p className="line-clamp-1 text-sm text-muted-foreground">
