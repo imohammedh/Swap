@@ -70,7 +70,9 @@ export default function MessagesPage() {
             size={48}
             className="mx-auto mb-4 text-muted-foreground"
           />
-          <h3 className="mb-2 text-lg font-semibold">Sign in to view messages</h3>
+          <h3 className="mb-2 text-lg font-semibold">
+            Sign in to view messages
+          </h3>
           <p className="mb-4 text-muted-foreground">
             You need to be signed in to view and send messages.
           </p>
@@ -107,7 +109,12 @@ export default function MessagesPage() {
 
   return (
     <div className="grid gap-4 lg:grid-cols-[300px_1fr]">
-      <Card className={cn(selectedConversation ? "hidden lg:block" : "block", "overflow-hidden")}>
+      <Card
+        className={cn(
+          selectedConversation ? "hidden lg:block" : "block",
+          "overflow-hidden",
+        )}
+      >
         <CardHeader>
           <CardTitle>Messages</CardTitle>
         </CardHeader>
@@ -148,7 +155,9 @@ export default function MessagesPage() {
                       <div className="flex min-w-0 flex-col gap-0.5 sm:flex-row sm:items-center sm:justify-between sm:gap-2">
                         <p
                           className={`line-clamp-1 ${
-                            isActive ? "font-semibold text-foreground" : "font-medium"
+                            isActive
+                              ? "font-semibold text-foreground"
+                              : "font-medium"
                           }`}
                         >
                           {otherUser?.name || "Unknown"}
@@ -177,18 +186,8 @@ export default function MessagesPage() {
       </Card>
 
       {selectedConversation ? (
-        <Card className="min-w-0">
+        <Card className="min-w-0 h-fit">
           <CardHeader className="space-y-3">
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => router.push("/account/messages")}
-              className="w-fit px-2 lg:hidden"
-            >
-              <ChevronLeft size={16} className="mr-1" />
-              Back
-            </Button>
             <div className="flex min-w-0 items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary">
                 {selectedConversation.participants.find(
@@ -264,13 +263,15 @@ export default function MessagesPage() {
           </CardContent>
         </Card>
       ) : (
-        <Card className="hidden lg:block">
+        <Card className="hidden lg:block h-fit">
           <CardContent className="p-8 text-center">
             <MessageSquare
               size={48}
               className="mx-auto mb-4 text-muted-foreground"
             />
-            <h3 className="mb-2 text-lg font-semibold">Select a conversation</h3>
+            <h3 className="mb-2 text-lg font-semibold">
+              Select a conversation
+            </h3>
             <p className="text-muted-foreground">
               Choose a conversation from the list to start messaging.
             </p>
@@ -280,4 +281,3 @@ export default function MessagesPage() {
     </div>
   );
 }
-
