@@ -39,7 +39,7 @@ export default function AccountSidebar() {
   const me = useQuery(api.users.me, {});
 
   return (
-    <aside className="space-y-4 rounded-xl border bg-card p-3 sm:p-4">
+    <aside className="space-y-4 rounded-xl border bg-card p-3 sm:p-4 h-fit">
       <div className="flex flex-col items-center gap-2 border-b pb-4 text-center">
         <div className="grid h-16 w-16 place-items-center overflow-hidden rounded-full bg-primary/10 text-xl font-bold text-primary sm:h-20 sm:w-20 sm:text-2xl">
           {me?.image ? (

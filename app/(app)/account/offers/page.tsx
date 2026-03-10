@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Search } from "lucide-react";
+import { Search, SlidersHorizontal } from "lucide-react";
 import { useState } from "react";
 import { useMutation, useQuery } from "convex/react";
 
@@ -10,6 +10,11 @@ import { api } from "@/convex/_generated/api";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 function formatEgp(value: number) {
   return `${new Intl.NumberFormat("en-US").format(value)} EGP`;
@@ -93,66 +98,80 @@ export default function OffersPage() {
       <Card>
         <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <CardTitle>Offers</CardTitle>
-          <div className="relative w-full sm:max-w-sm">
-            <Search
-              className="pointer-events-none absolute left-3 top-3 text-muted-foreground"
-              size={14}
-            />
-            <Input
-              className="pl-8"
-              placeholder="Search in offers"
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-            />
+          <div className="flex items-center gap-2 w-full sm:max-w-lg">
+            <div className="relative flex-1">
+              <Search
+                className="pointer-events-none absolute left-3 top-3 text-muted-foreground"
+                size={14}
+              />
+              <Input
+                className="pl-8"
+                placeholder="Search in offers"
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+              />
+            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="shrink-0 gap-2">
+                  <SlidersHorizontal size={15} />
+                  Filters
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                align="end"
+                className="w-72 p-3 space-y-3"
+                onCloseAutoFocus={(e) => e.preventDefault()}
+              >
+                <Input
+                  placeholder="From value (EGP)"
+                  type="number"
+                  value={minValue}
+                  onChange={(event) => setMinValue(event.target.value)}
+                />
+                <Input
+                  placeholder="To value (EGP)"
+                  type="number"
+                  value={maxValue}
+                  onChange={(event) => setMaxValue(event.target.value)}
+                />
+                <select
+                  value={status}
+                  onChange={(event) => setStatus(event.target.value)}
+                  className="h-10 w-full rounded-md border bg-background px-3 text-sm"
+                >
+                  <option value="all">All status</option>
+                  <option value="pending">Pending</option>
+                  <option value="accepted">Accepted</option>
+                  <option value="rejected">Rejected</option>
+                </select>
+                <Input
+                  type="date"
+                  value={fromDate}
+                  onChange={(event) => setFromDate(event.target.value)}
+                />
+                <Input
+                  type="date"
+                  value={toDate}
+                  onChange={(event) => setToDate(event.target.value)}
+                />
+                <div className="grid grid-cols-2 gap-2">
+                  <Button variant="outline" onClick={clearFilters}>
+                    Clear
+                  </Button>
+                  <Button onClick={applyFilters}>Apply</Button>
+                </div>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </CardHeader>
-        <CardContent className="grid gap-4 lg:grid-cols-[320px_1fr]">
-          <div className="space-y-3 rounded-lg border bg-muted/20 p-3 sm:p-4">
-            <h3 className="font-semibold">Filters</h3>
-            <Input
-              placeholder="From value (EGP)"
-              type="number"
-              value={minValue}
-              onChange={(event) => setMinValue(event.target.value)}
-            />
-            <Input
-              placeholder="To value (EGP)"
-              type="number"
-              value={maxValue}
-              onChange={(event) => setMaxValue(event.target.value)}
-            />
-            <select
-              value={status}
-              onChange={(event) => setStatus(event.target.value)}
-              className="h-10 w-full rounded-md border bg-background px-3 text-sm"
-            >
-              <option value="all">All status</option>
-              <option value="pending">Pending</option>
-              <option value="accepted">Accepted</option>
-              <option value="rejected">Rejected</option>
-            </select>
-            <Input
-              type="date"
-              value={fromDate}
-              onChange={(event) => setFromDate(event.target.value)}
-            />
-            <Input
-              type="date"
-              value={toDate}
-              onChange={(event) => setToDate(event.target.value)}
-            />
-            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-              <Button variant="outline" onClick={clearFilters}>
-                Clear
-              </Button>
-              <Button onClick={applyFilters}>Apply Filters</Button>
-            </div>
-          </div>
-
+        <CardContent>
           <div className="rounded-lg border bg-muted/20 p-3">
             {loading ? (
               <div className="grid min-h-105 place-items-center text-center">
-                <p className="text-sm text-muted-foreground">Loading offers...</p>
+                <p className="text-sm text-muted-foreground">
+                  Loading offers...
+                </p>
               </div>
             ) : rows.length === 0 ? (
               <div className="grid min-h-105 place-items-center text-center">
@@ -163,9 +182,15 @@ export default function OffersPage() {
             ) : (
               <div className="space-y-3">
                 {rows.map((offer) => (
-                  <article key={offer._id} className="overflow-hidden rounded-xl border bg-card">
+                  <article
+                    key={offer._id}
+                    className="overflow-hidden rounded-xl border bg-card"
+                  >
                     <div className="grid gap-3 p-3 md:grid-cols-[160px_1fr]">
-                      <Link href={`/products/${offer.listingSlug}`} className="relative h-28 overflow-hidden rounded-md">
+                      <Link
+                        href={`/products/${offer.listingSlug}`}
+                        className="relative h-28 overflow-hidden rounded-md"
+                      >
                         <Image
                           src={offer.listingImage}
                           alt={offer.listingTitle}
@@ -175,16 +200,29 @@ export default function OffersPage() {
                       </Link>
                       <div className="space-y-2 min-w-0">
                         <div className="flex flex-wrap items-center justify-between gap-2">
-                          <Link href={`/products/${offer.listingSlug}`} className="line-clamp-2 font-semibold hover:underline">
+                          <Link
+                            href={`/products/${offer.listingSlug}`}
+                            className="line-clamp-2 font-semibold hover:underline"
+                          >
                             {offer.listingTitle}
                           </Link>
-                          <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${statusBadgeClass[offer.status]}`}>
+                          <span
+                            className={`rounded-full px-2 py-0.5 text-xs font-semibold ${statusBadgeClass[offer.status]}`}
+                          >
                             {offer.status}
                           </span>
                         </div>
-                        <p className="text-sm text-muted-foreground">From: {offer.buyerName}</p>
-                        <p className="text-lg font-bold text-primary">{formatEgp(offer.amountEgp)}</p>
-                        {offer.message && <p className="text-sm text-muted-foreground break-words">&ldquo;{offer.message}&rdquo;</p>}
+                        <p className="text-sm text-muted-foreground">
+                          From: {offer.buyerName}
+                        </p>
+                        <p className="text-lg font-bold text-primary">
+                          {formatEgp(offer.amountEgp)}
+                        </p>
+                        {offer.message && (
+                          <p className="text-sm text-muted-foreground break-words">
+                            &ldquo;{offer.message}&rdquo;
+                          </p>
+                        )}
                         <p className="text-xs text-muted-foreground">
                           {new Date(offer._creationTime).toLocaleString()}
                         </p>
@@ -192,14 +230,24 @@ export default function OffersPage() {
                           <div className="flex flex-col gap-2 sm:flex-row">
                             <Button
                               size="sm"
-                              onClick={() => void updateStatus({ offerId: offer._id, status: "accepted" })}
+                              onClick={() =>
+                                void updateStatus({
+                                  offerId: offer._id,
+                                  status: "accepted",
+                                })
+                              }
                             >
                               Accept
                             </Button>
                             <Button
                               size="sm"
                               variant="outline"
-                              onClick={() => void updateStatus({ offerId: offer._id, status: "rejected" })}
+                              onClick={() =>
+                                void updateStatus({
+                                  offerId: offer._id,
+                                  status: "rejected",
+                                })
+                              }
                             >
                               Reject
                             </Button>
