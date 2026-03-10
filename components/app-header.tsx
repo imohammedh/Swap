@@ -61,23 +61,16 @@ function initials(name: string | null | undefined) {
 }
 
 type AppHeaderProps = {
-  searchTerm: string;
-  setSearchTerm: (term: string) => void;
-  onSearchSubmit: (e: FormEvent) => void;
   onCreateListing: () => void;
 };
 
-export default function AppHeader({
-  searchTerm,
-  setSearchTerm,
-  onSearchSubmit,
-  onCreateListing,
-}: AppHeaderProps) {
+export default function AppHeader({ onCreateListing }: AppHeaderProps) {
   const router = useRouter();
   const { resolvedTheme, setTheme } = useTheme();
   const { isAuthenticated } = useConvexAuth();
   const { signOut } = useAuthActions();
 
+  const [searchTerm, setSearchTerm] = useState("");
   const [notifOpen, setNotifOpen] = useState(false);
   const [unreadOnly, setUnreadOnly] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -96,7 +89,9 @@ export default function AppHeader({
   const visibleNotifications =
     notifications?.filter((n) => (unreadOnly ? !n.read : true)) ?? [];
 
-  const getNotificationHref = (item: NonNullable<typeof notifications>[number]) => {
+  const getNotificationHref = (
+    item: NonNullable<typeof notifications>[number],
+  ) => {
     if (item?.type === "message" && item?.conversationId) {
       return `/account/messages?id=${item.conversationId}`;
     }
@@ -107,13 +102,22 @@ export default function AppHeader({
     return null;
   };
 
-  const handleNotificationClick = (item: NonNullable<typeof notifications>[number]) => {
+  const handleNotificationClick = (
+    item: NonNullable<typeof notifications>[number],
+  ) => {
     const href = getNotificationHref(item);
     if (!href) return;
     setNotifOpen(false);
     router.push(href);
   };
 
+  const handleSearchSubmit = (e: FormEvent) => {
+    e.preventDefault();
+    const trimmed = searchTerm.trim();
+    const params = new URLSearchParams();
+    if (trimmed) params.set("q", trimmed);
+    router.push(`/search?${params.toString()}`);
+  };
 
   // Close notification panel on outside click
   useEffect(() => {
@@ -143,7 +147,7 @@ export default function AppHeader({
         </Link>
 
         <form
-          onSubmit={onSearchSubmit}
+          onSubmit={handleSearchSubmit}
           className="relative min-w-[220px] flex-1"
         >
           <Search
@@ -153,7 +157,7 @@ export default function AppHeader({
           <Input
             placeholder="Search products, locations, categories..."
             value={searchTerm}
-            onChange={(event) => setSearchTerm(event.target.value)}
+            onChange={(e) => setSearchTerm(e.target.value)}
             className="h-11 pl-10"
           />
         </form>
@@ -171,7 +175,7 @@ export default function AppHeader({
           <ThemeToggle />
         </div>
 
-        {/* Desktop: account when signed in, sign in when not */}
+        {/* Desktop: account / sign in */}
         {isAuthenticated ? (
           <Button
             variant="outline"
@@ -190,7 +194,7 @@ export default function AppHeader({
           </Button>
         )}
 
-        {/* Desktop: notifications bell â€” always outside any menu */}
+        {/* Desktop: notifications bell */}
         <Button
           ref={notifBellDesktopRef}
           variant="ghost"
@@ -207,7 +211,7 @@ export default function AppHeader({
           )}
         </Button>
 
-        {/* Mobile: notifications bell â€” always outside dropdown */}
+        {/* Mobile: notifications bell */}
         <Button
           ref={notifBellMobileRef}
           variant="ghost"
@@ -224,7 +228,7 @@ export default function AppHeader({
           )}
         </Button>
 
-        {/* â”€â”€ Mobile hamburger dropdown â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+        {/* Mobile hamburger dropdown */}
         <DropdownMenu
           open={dropdownOpen}
           onOpenChange={(open) => {
@@ -264,23 +268,20 @@ export default function AppHeader({
                     {me?.name ?? "Your account"}
                   </p>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    0.0 Â· 0 Ratings
+                    0.0 · 0 Ratings
                   </p>
                 </div>
               </div>
             </DropdownMenuLabel>
 
-            {/* Account */}
             <DropdownMenuItem onClick={() => router.push("/account")}>
               <User size={16} /> Manage Account
             </DropdownMenuItem>
 
-            {/* Create listing â€” mobile only */}
             <DropdownMenuItem onClick={onCreateListing}>
               <Upload size={16} /> Create listing
             </DropdownMenuItem>
 
-            {/* Theme */}
             <DropdownMenuItem
               onClick={() =>
                 setTheme(resolvedTheme === "dark" ? "light" : "dark")
@@ -327,7 +328,7 @@ export default function AppHeader({
           </DropdownMenuContent>
         </DropdownMenu>
 
-        {/* â”€â”€ Notification panel â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+        {/* Notification panel */}
         {notifOpen && (
           <div
             ref={notifPanelRef}
@@ -340,7 +341,7 @@ export default function AppHeader({
                 <input
                   type="checkbox"
                   checked={unreadOnly}
-                  onChange={(event) => setUnreadOnly(event.target.checked)}
+                  onChange={(e) => setUnreadOnly(e.target.checked)}
                   className="accent-primary"
                 />
               </label>
@@ -378,5 +379,3 @@ export default function AppHeader({
     </header>
   );
 }
-
-
