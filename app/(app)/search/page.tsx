@@ -33,6 +33,8 @@ function formatEgp(value: number) {
 }
 
 function FilterFields({
+  category,
+  setCategory,
   location,
   setLocation,
   minPrice,
@@ -48,6 +50,8 @@ function FilterFields({
   onApply,
   onClear,
 }: {
+  category: string;
+  setCategory: (v: string) => void;
   location: string;
   setLocation: (v: string) => void;
   minPrice: string;
@@ -65,6 +69,28 @@ function FilterFields({
 }) {
   return (
     <div className="space-y-4">
+      <div className="space-y-1.5">
+        <label className="text-sm font-medium">Category</label>
+        <div className="flex flex-wrap gap-1.5">
+          <button
+            type="button"
+            onClick={() => setCategory("all")}
+            className={`rounded-full border px-3 py-1 text-xs font-medium transition ${category === "all" ? "border-primary bg-primary text-primary-foreground" : "hover:bg-muted"}`}
+          >
+            All
+          </button>
+          {categoryOptions.map((cat) => (
+            <button
+              key={cat.id}
+              type="button"
+              onClick={() => setCategory(cat.id)}
+              className={`rounded-full border px-3 py-1 text-xs font-medium transition ${category === cat.id ? "border-primary bg-primary text-primary-foreground" : "hover:bg-muted"}`}
+            >
+              {cat.name}
+            </button>
+          ))}
+        </div>
+      </div>
       <div className="space-y-1.5">
         <label className="text-sm font-medium">Location</label>
         <Select value={location} onValueChange={setLocation}>
@@ -222,12 +248,12 @@ export default function SearchPage() {
     setSort("newest");
   };
 
-  const handleCategoryClick = (id: string) => {
-    setCategory(id);
-    router.replace(`/search?${buildParams({ category: id })}`);
-  };
-
   const filterProps = {
+    category,
+    setCategory: (id: string) => {
+      setCategory(id);
+      router.replace(`/search?${buildParams({ category: id })}`);
+    },
     location,
     setLocation,
     minPrice,
@@ -247,35 +273,6 @@ export default function SearchPage() {
   return (
     <main className="min-h-screen bg-background text-foreground">
       <MaxWidth className="space-y-4 py-4 md:py-6">
-        {/* ── Category pills ── */}
-        <div className="flex flex-wrap gap-2">
-          <button
-            type="button"
-            onClick={() => handleCategoryClick("all")}
-            className={`rounded-full border px-4 py-1.5 text-sm font-medium transition ${
-              category === "all"
-                ? "border-primary bg-primary text-primary-foreground"
-                : "bg-card hover:bg-muted"
-            }`}
-          >
-            All
-          </button>
-          {categoryOptions.map((cat) => (
-            <button
-              key={cat.id}
-              type="button"
-              onClick={() => handleCategoryClick(cat.id)}
-              className={`rounded-full border px-4 py-1.5 text-sm font-medium transition ${
-                category === cat.id
-                  ? "border-primary bg-primary text-primary-foreground"
-                  : "bg-card hover:bg-muted"
-              }`}
-            >
-              {cat.name}
-            </button>
-          ))}
-        </div>
-
         {/* ── Main layout: sidebar (desktop) + results ── */}
         <div className="grid gap-4 lg:grid-cols-[280px_1fr]">
           {/* Desktop sidebar filter panel */}
@@ -321,7 +318,7 @@ export default function SearchPage() {
             {/* Listing cards */}
             {sorted.map((product) => (
               <Link key={product._id} href={`/products/${product.slug}`}>
-                <article className="grid overflow-hidden rounded-xl border bg-card transition hover:shadow-md md:grid-cols-[280px_1fr]">
+                <article className="grid mb-3 overflow-hidden rounded-xl border bg-card transition hover:shadow-md md:grid-cols-[280px_1fr]">
                   <div className="relative h-44 md:h-full">
                     <Image
                       src={
