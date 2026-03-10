@@ -4,7 +4,6 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import { Megaphone, Pencil } from "lucide-react";
 import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import { useRouter } from "next/navigation";
-import { useAuthActions } from "@convex-dev/auth/react";
 import type { Id } from "@/convex/_generated/dataModel";
 
 import { api } from "@/convex/_generated/api";
@@ -26,7 +25,6 @@ function getInitials(name: string | null | undefined) {
 
 export default function AccountPage() {
   const router = useRouter();
-  const { signOut } = useAuthActions();
   const { isAuthenticated } = useConvexAuth();
 
   const me = useQuery(api.users.me, {});
@@ -61,7 +59,9 @@ export default function AccountPage() {
   const visibleNotifications =
     notifications?.filter((n) => (unreadOnly ? !n.read : true)) ?? [];
 
-  const getNotificationHref = (item: NonNullable<typeof notifications>[number]) => {
+  const getNotificationHref = (
+    item: NonNullable<typeof notifications>[number],
+  ) => {
     if (item?.type === "message" && item?.conversationId) {
       return `/account/messages?id=${item.conversationId}`;
     }
@@ -72,7 +72,9 @@ export default function AccountPage() {
     return null;
   };
 
-  const handleNotificationClick = (item: NonNullable<typeof notifications>[number]) => {
+  const handleNotificationClick = (
+    item: NonNullable<typeof notifications>[number],
+  ) => {
     const href = getNotificationHref(item);
     if (!href) return;
     router.push(href);
@@ -171,14 +173,21 @@ export default function AccountPage() {
             <div className="space-y-4 min-w-0">
               <div className="flex min-w-0 items-center gap-3">
                 <Avatar className="h-16 w-16">
-                  <AvatarImage src={me?.image ?? undefined} alt={me?.name ?? "User"} />
+                  <AvatarImage
+                    src={me?.image ?? undefined}
+                    alt={me?.name ?? "User"}
+                  />
                   <AvatarFallback className="bg-primary/10 text-primary text-lg font-bold">
                     {initials}
                   </AvatarFallback>
                 </Avatar>
                 <div>
-                  <p className="truncate font-medium">{me?.name || "No name set"}</p>
-                  <p className="truncate text-sm text-muted-foreground">{me?.email}</p>
+                  <p className="truncate font-medium">
+                    {me?.name || "No name set"}
+                  </p>
+                  <p className="truncate text-sm text-muted-foreground">
+                    {me?.email}
+                  </p>
                 </div>
               </div>
               <div className="space-y-2">
@@ -249,31 +258,6 @@ export default function AccountPage() {
           </CardContent>
         </Card>
       </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Session</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Button
-            type="button"
-            variant="destructive"
-            onClick={() => {
-              void signOut().then(() => router.push("/signin"));
-            }}
-          >
-            Sign out
-          </Button>
-        </CardContent>
-      </Card>
     </div>
   );
 }
-
-
-
-
-
-
-
-

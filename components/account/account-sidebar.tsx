@@ -15,6 +15,10 @@ import {
 import { api } from "@/convex/_generated/api";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useRouter } from "next/navigation";
+import { FormEvent, useEffect, useMemo, useState } from "react";
+import { useConvexAuth } from "convex/react";
+import { useAuthActions } from "@convex-dev/auth/react";
 
 const navItems = [
   { href: "/account/offers", label: "Offers", icon: Ticket },
@@ -35,6 +39,9 @@ function initials(name: string | null | undefined) {
 }
 
 export default function AccountSidebar() {
+  const router = useRouter();
+  const { signOut } = useAuthActions();
+  const { isAuthenticated } = useConvexAuth();
   const pathname = usePathname();
   const me = useQuery(api.users.me, {});
 
@@ -85,6 +92,17 @@ export default function AccountSidebar() {
           );
         })}
       </nav>
+
+      <Button
+        type="button"
+        variant="outline"
+        className=" w-full hover:bg-destructive hover:text-primary-foreground"
+        onClick={() => {
+          void signOut().then(() => router.push("/signin"));
+        }}
+      >
+        Sign out
+      </Button>
     </aside>
   );
 }
