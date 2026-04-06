@@ -165,6 +165,12 @@
   --shadow-2xl: var(--shadow-2xl);
 }
 
+html {
+  scroll-padding: 100px;
+  scroll-behavior: smooth;
+  scrollbar-width: thin;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
