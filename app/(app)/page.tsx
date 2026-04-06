@@ -379,13 +379,13 @@ export default function Home() {
             className="object-cover"
             priority
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/35 to-black/15" />
+          <div className="absolute inset-0 bg-linear-to-r from-black/75 via-black/35 to-black/15" />
           <div className="absolute inset-0 flex items-end justify-between p-4 md:p-6">
             <div>
               <p className="text-xs uppercase tracking-[0.16em] text-white/80">
                 just for you
               </p>
-              <h2 className="mt-1 text-4xl max-w-lg font-black text-secondary-foreground md:text-4xl">
+              <h2 className="mt-1 text-4xl max-w-lg font-black text-secondary-foreground dark:text-primary md:text-4xl">
                 if you don't want to you don't have to
               </h2>
               <p className="mt-2 max-w-xl text-sm text-white/85 md:text-base">
@@ -622,13 +622,10 @@ export default function Home() {
                 </button>
               )}
 
-              {/* fade + scrollbar-hidden wrapper */}
               <div className="relative overflow-hidden">
-                {/* left fade — only when scrollable left */}
                 {canScrollLeft && (
                   <div className="pointer-events-none absolute left-0 top-0 z-10 h-full w-10 bg-linear-to-r from-background to-transparent" />
                 )}
-                {/* right fade — only when scrollable right */}
                 {canScrollRight && (
                   <div className="pointer-events-none absolute right-0 top-0 z-10 h-full w-10 bg-linear-to-l from-background to-transparent" />
                 )}
@@ -679,13 +676,13 @@ export default function Home() {
                 className="object-cover"
                 priority
               />
-              <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/35 to-black/15" />
+              <div className="absolute inset-0 bg-linear-to-r from-black/75 via-black/35 to-black/15" />
               <div className="absolute inset-0 flex items-end justify-between p-4 md:p-6">
                 <div>
                   <p className="text-xs uppercase tracking-[0.16em] text-white/80">
                     Featured Deal
                   </p>
-                  <h2 className="mt-1 text-4xl font-black text-secondary-foreground md:text-4xl">
+                  <h2 className="mt-1 text-4xl font-black text-secondary-foreground dark:text-primary md:text-4xl">
                     we're just launched{" "}
                   </h2>
                   <p className="mt-2 max-w-xl text-sm text-white/85 md:text-base">
@@ -709,7 +706,7 @@ export default function Home() {
                   key={product._id}
                   href={`/products/${product.slug}`}
                   data-slider-item="true"
-                  className="block w-[260px] shrink-0 snap-start sm:w-[300px] lg:w-[320px]"
+                  className="block w-65 shrink-0 snap-start lg:w-[320px]"
                 >
                   <article className="overflow-hidden rounded-xl border bg-card transition hover:shadow-md">
                     <Image
