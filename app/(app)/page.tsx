@@ -645,19 +645,19 @@ export default function Home() {
                         key={category.id}
                         type="button"
                         onClick={() => setActiveCategory(category.id)}
-                        className={`flex shrink-0 items-center gap-2 rounded-full border bg-primary-foreground px-3 py-2 text-sm font-medium transition ${
+                        className={`border-border flex shrink-0 items-center gap-2 rounded-full border  px-3 py-2 text-sm font-medium transition ${
                           activeCategory === category.id
-                            ? "border-primary bg-primary-foreground/10 text-primary"
-                            : "border-input bg-primary-foreground text-primary"
+                            ? " bg-primary dark:bg-secondary-foreground text-primary-foreground"
+                            : " bg-primary-foreground text-primary dark:text-secondary-foreground"
                         }`}
                       >
-                        <span className="grid h-8 w-8 place-items-center rounded-full bg-primary">
+                        <span className="grid h-8 w-8 place-items-center rounded-full border border-border dark:border-secondary bg-primary dark:bg-secondary-foreground">
                           <Icon
                             size={16}
                             className=" text-primary-foreground"
                           />
                         </span>
-                        <span>{category.name}</span>
+                        <p>{category.name}</p>
                       </button>
                     );
                   })}
