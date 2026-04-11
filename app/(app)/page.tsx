@@ -645,7 +645,7 @@ export default function Home() {
                         key={category.id}
                         type="button"
                         onClick={() => setActiveCategory(category.id)}
-                        className={`border-border flex shrink-0 items-center gap-2 rounded-full border  px-3 py-2 text-sm font-medium transition ${
+                        className={`border border-border flex shrink-0 items-center gap-2 rounded-full px-3 py-2 text-sm font-medium transition ${
                           activeCategory === category.id
                             ? " bg-primary dark:bg-secondary-foreground text-primary-foreground"
                             : " bg-primary-foreground text-primary dark:text-secondary-foreground"
