@@ -376,14 +376,15 @@ export default function SharedHeader() {
                 </p>
               ) : (
                 visibleNotifications.map((item) => (
-                  <button
+                  <Button
                     type="button"
                     key={item._id}
+                    variant="ghost"
                     onClick={() => handleNotificationClick(item)}
-                    className={`w-full rounded-md border p-2 text-left text-sm hover:bg-muted/40 ${item.read ? "bg-muted/20" : "bg-primary/10"}`}
+                    className={`h-auto w-full justify-start rounded-md border p-2 text-left text-sm hover:bg-muted/40 ${item.read ? "bg-muted/20" : "bg-primary/10"}`}
                   >
                     {item.text}
-                  </button>
+                  </Button>
                 ))
               )}
             </div>

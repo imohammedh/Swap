@@ -230,28 +230,30 @@ export default function Home() {
 
       <section className="rounded-xl border bg-card p-2 shadow-sm">
         <div className="grid grid-cols-2 gap-2">
-          <button
+          <Button
             type="button"
             onClick={() => handleViewChange("swap")}
-            className={`rounded-lg px-4 py-2 text-sm font-semibold transition ${
+            variant={currentView === "swap" ? "default" : "outline"}
+            className={`rounded-lg ${
               currentView === "swap"
-                ? "bg-primary text-primary-foreground"
-                : "bg-background text-foreground hover:bg-muted"
+                ? ""
+                : "border-transparent bg-background text-foreground hover:bg-muted"
             }`}
           >
             Swap
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
             onClick={() => handleViewChange("browse")}
-            className={`rounded-lg px-4 py-2 text-sm font-semibold transition ${
+            variant={currentView === "browse" ? "default" : "outline"}
+            className={`rounded-lg ${
               currentView === "browse"
-                ? "bg-primary text-primary-foreground"
-                : "bg-background text-foreground hover:bg-muted"
+                ? ""
+                : "border-transparent bg-background text-foreground hover:bg-muted"
             }`}
           >
             Browse
-          </button>
+          </Button>
         </div>
       </section>
 
@@ -393,13 +395,15 @@ export default function Home() {
             <div className="flex items-center gap-2">
               {/* Left arrow — only when scrollable left */}
               {canScrollLeft && (
-                <button
+                <Button
                   type="button"
+                  size="icon"
+                  variant="outline"
                   onClick={() => scrollCategories("left")}
-                  className="grid h-8 w-8 shrink-0 place-items-center rounded-full border bg-background text-muted-foreground"
+                  className="h-8 w-8 shrink-0 rounded-full bg-background text-muted-foreground"
                 >
                   <ChevronLeft size={14} />
-                </button>
+                </Button>
               )}
 
               {/* fade + scrollbar-hidden wrapper */}
@@ -424,21 +428,24 @@ export default function Home() {
                         category.id as keyof typeof categoryIcons
                       ] ?? Shapes;
                     return (
-                      <button
+                      <Button
                         key={category.id}
                         type="button"
+                        variant={
+                          activeCategory === category.id ? "secondary" : "outline"
+                        }
                         onClick={() => setActiveCategory(category.id)}
-                        className={`flex shrink-0 items-center gap-2 rounded-full border px-3 py-2 text-sm font-medium transition ${
+                        className={`h-auto shrink-0 rounded-full px-3 py-2 text-sm font-medium ${
                           activeCategory === category.id
-                            ? "border-primary bg-primary/10 text-foreground"
-                            : "border-input bg-background text-foreground"
+                            ? "border-primary bg-primary/10 text-foreground hover:bg-primary/10"
+                            : "bg-background text-foreground"
                         }`}
                       >
                         <span className="grid h-8 w-8 place-items-center rounded-full bg-muted">
                           <Icon size={16} />
                         </span>
                         <span>{category.name}</span>
-                      </button>
+                      </Button>
                     );
                   })}
                 </div>
@@ -446,13 +453,15 @@ export default function Home() {
 
               {/* Right arrow — only when scrollable right */}
               {canScrollRight && (
-                <button
+                <Button
                   type="button"
+                  size="icon"
+                  variant="outline"
                   onClick={() => scrollCategories("right")}
-                  className="grid h-8 w-8 shrink-0 place-items-center rounded-full border bg-background text-muted-foreground"
+                  className="h-8 w-8 shrink-0 rounded-full bg-background text-muted-foreground"
                 >
                   <ChevronRight size={14} />
-                </button>
+                </Button>
               )}
             </div>
           </section>
@@ -480,18 +489,22 @@ export default function Home() {
                   </p>
                 </div>
                 <div className="hidden items-center gap-2 md:flex">
-                  <button
+                  <Button
                     type="button"
-                    className="grid h-9 w-9 place-items-center rounded-full bg-black/45 text-white backdrop-blur"
+                    size="icon"
+                    variant="ghost"
+                    className="rounded-full bg-black/45 text-white backdrop-blur hover:bg-black/55 hover:text-white"
                   >
                     <ChevronLeft size={16} />
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     type="button"
-                    className="grid h-9 w-9 place-items-center rounded-full bg-black/45 text-white backdrop-blur"
+                    size="icon"
+                    variant="ghost"
+                    className="rounded-full bg-black/45 text-white backdrop-blur hover:bg-black/55 hover:text-white"
                   >
                     <ChevronRight size={16} />
-                  </button>
+                  </Button>
                 </div>
               </div>
             </div>

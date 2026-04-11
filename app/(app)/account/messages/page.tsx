@@ -129,13 +129,15 @@ export default function MessagesPage() {
               const isActive = conversationId === conversation._id;
 
               return (
-                <button
+                <Button
                   key={conversation._id}
+                  type="button"
+                  variant="ghost"
                   onClick={() =>
                     router.push(`/account/messages?id=${conversation._id}`)
                   }
                   aria-current={isActive ? "page" : undefined}
-                  className={`w-full overflow-hidden border-l-2 p-3 text-left transition-colors duration-150 ${
+                  className={`h-auto w-full justify-start overflow-hidden border-l-2 p-3 text-left transition-colors duration-150 ${
                     isActive
                       ? "border-l-primary bg-primary/15 shadow-sm hover:bg-primary/20"
                       : "border-l-transparent hover:border-l-primary/60 hover:bg-primary/10"
@@ -178,7 +180,7 @@ export default function MessagesPage() {
                       </p>
                     </div>
                   </div>
-                </button>
+                </Button>
               );
             })}
           </div>

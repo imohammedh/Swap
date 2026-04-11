@@ -158,23 +158,27 @@ function HorizontalSlider({
   return (
     <div className="relative w-full">
       {canScrollLeft && (
-        <button
+        <Button
           type="button"
+          size="icon"
+          variant="outline"
           onClick={() => scroll("left")}
-          className="absolute left-2 top-1/2 z-20 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full border bg-background/90 text-muted-foreground shadow-sm backdrop-blur"
+          className="absolute left-2 top-1/2 z-20 -translate-y-1/2 rounded-full bg-background/90 text-muted-foreground shadow-sm backdrop-blur"
         >
           <ChevronLeft size={16} />
-        </button>
+        </Button>
       )}
 
       {canScrollRight && (
-        <button
+        <Button
           type="button"
+          size="icon"
+          variant="outline"
           onClick={() => scroll("right")}
-          className="absolute right-2 top-1/2 z-20 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full border bg-background/90 text-muted-foreground shadow-sm backdrop-blur"
+          className="absolute right-2 top-1/2 z-20 -translate-y-1/2 rounded-full bg-background/90 text-muted-foreground shadow-sm backdrop-blur"
         >
           <ChevronRight size={16} />
-        </button>
+        </Button>
       )}
 
       <div className="relative overflow-hidden">
@@ -397,28 +401,30 @@ export default function Home() {
         </div>
         <div className=" w-full flex justify-center items-center">
           <div className="max-w-3xl p-4 flex gap-2 items-center flex-1 justify-center text-center">
-            <button
+            <Button
               type="button"
               onClick={() => handleViewChange("swap")}
-              className={`rounded-lg flex-1 px-4 py-2 text-sm font-semibold transition ${
+              variant={currentView === "swap" ? "default" : "outline"}
+              className={`flex-1 rounded-lg ${
                 currentView === "swap"
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-background text-foreground hover:bg-muted"
+                  ? ""
+                  : "border-transparent bg-background text-foreground hover:bg-muted"
               }`}
             >
               Swap
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
               onClick={() => handleViewChange("browse")}
-              className={`rounded-lg flex-1 px-4 py-2 text-sm font-semibold transition ${
+              variant={currentView === "browse" ? "default" : "outline"}
+              className={`flex-1 rounded-lg ${
                 currentView === "browse"
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-background text-foreground hover:bg-muted"
+                  ? ""
+                  : "border-transparent bg-background text-foreground hover:bg-muted"
               }`}
             >
               Browse
-            </button>
+            </Button>
           </div>
         </div>
       </section>
@@ -603,23 +609,27 @@ export default function Home() {
           <section className="rounded-xl bg-transparent py-3 md:py-4">
             <div className="relative">
               {canScrollLeft && (
-                <button
+                <Button
                   type="button"
+                  size="icon"
+                  variant="outline"
                   onClick={() => scrollCategories("left")}
-                  className="absolute -left-3 top-1/2 z-20 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full border bg-background/80 text-muted-foreground shadow-sm backdrop-blur md:-left-4"
+                  className="absolute -left-3 top-1/2 z-20 -translate-y-1/2 rounded-full bg-background/80 text-muted-foreground shadow-sm backdrop-blur md:-left-4"
                 >
                   <ChevronLeft size={14} />
-                </button>
+                </Button>
               )}
 
               {canScrollRight && (
-                <button
+                <Button
                   type="button"
+                  size="icon"
+                  variant="outline"
                   onClick={() => scrollCategories("right")}
-                  className="absolute -right-3 top-1/2 z-20 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full border bg-background/80 text-muted-foreground shadow-sm backdrop-blur md:-right-4"
+                  className="absolute -right-3 top-1/2 z-20 -translate-y-1/2 rounded-full bg-background/80 text-muted-foreground shadow-sm backdrop-blur md:-right-4"
                 >
                   <ChevronRight size={14} />
-                </button>
+                </Button>
               )}
 
               <div className="relative overflow-hidden">
@@ -641,14 +651,17 @@ export default function Home() {
                         category.id as keyof typeof categoryIcons
                       ] ?? Shapes;
                     return (
-                      <button
+                      <Button
                         key={category.id}
                         type="button"
+                        variant={
+                          activeCategory === category.id ? "default" : "outline"
+                        }
                         onClick={() => setActiveCategory(category.id)}
-                        className={`border border-border flex shrink-0 items-center gap-2 rounded-full px-3 py-2 text-sm font-medium transition ${
+                        className={`h-auto shrink-0 rounded-full px-3 py-2 text-sm font-medium ${
                           activeCategory === category.id
-                            ? " bg-primary dark:bg-secondary-foreground text-primary-foreground"
-                            : " bg-primary-foreground text-primary dark:text-secondary-foreground"
+                            ? "dark:bg-secondary-foreground"
+                            : "border-border bg-primary-foreground text-primary dark:text-secondary-foreground"
                         }`}
                       >
                         <span className="grid h-8 w-8 place-items-center rounded-full border border-border dark:border-secondary bg-primary dark:bg-secondary-foreground">
@@ -658,7 +671,7 @@ export default function Home() {
                           />
                         </span>
                         <p>{category.name}</p>
-                      </button>
+                      </Button>
                     );
                   })}
                 </div>

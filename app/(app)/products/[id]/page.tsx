@@ -316,18 +316,24 @@ export default function ProductDetailsPage({
               {/* Image navigation */}
               {listing.images && listing.images.length > 1 && (
                 <>
-                  <button
+                  <Button
+                    type="button"
+                    size="icon"
+                    variant="ghost"
                     onClick={() => handleImageSwipe("left")}
-                    className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full bg-black/50 p-2 text-white hover:bg-black/70"
+                    className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full bg-black/50 text-white hover:bg-black/70 hover:text-white"
                   >
                     <ChevronLeft size={16} />
-                  </button>
-                  <button
+                  </Button>
+                  <Button
+                    type="button"
+                    size="icon"
+                    variant="ghost"
                     onClick={() => handleImageSwipe("right")}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-black/50 p-2 text-white hover:bg-black/70"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-black/50 text-white hover:bg-black/70 hover:text-white"
                   >
                     <ChevronRight size={16} />
-                  </button>
+                  </Button>
                 </>
               )}
 
@@ -352,10 +358,12 @@ export default function ProductDetailsPage({
             {listing.images && listing.images.length > 1 && (
               <div className="flex gap-2 p-4">
                 {listing.images.map((image, index) => (
-                  <button
+                  <Button
                     key={index}
+                    type="button"
+                    variant="ghost"
                     onClick={() => setSelectedImageIndex(index)}
-                    className={`relative aspect-square w-20 overflow-hidden rounded-lg border-2 ${
+                    className={`relative h-auto aspect-square w-20 overflow-hidden rounded-lg border-2 p-0 ${
                       index === selectedImageIndex
                         ? "border-primary"
                         : "border-transparent"
@@ -367,7 +375,7 @@ export default function ProductDetailsPage({
                       fill
                       className="object-cover"
                     />
-                  </button>
+                  </Button>
                 ))}
               </div>
             )}

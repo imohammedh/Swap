@@ -439,10 +439,12 @@ export default function SignIn() {
                             fieldErrors.password ? "password-error" : undefined
                           }
                         />
-                        <button
+                        <Button
                           type="button"
+                          size="icon"
+                          variant="ghost"
                           onClick={() => setShowPassword((v) => !v)}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                          className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                           aria-label={
                             showPassword ? "Hide password" : "Show password"
                           }
@@ -452,7 +454,7 @@ export default function SignIn() {
                           ) : (
                             <Eye size={16} />
                           )}
-                        </button>
+                        </Button>
                       </div>
                       {fieldErrors.password ? (
                         <FieldError message={fieldErrors.password} />
@@ -483,13 +485,14 @@ export default function SignIn() {
                     {flow === "signIn"
                       ? "Don't have an account? "
                       : "Already have an account? "}
-                    <button
+                    <Button
                       type="button"
-                      className="font-semibold text-foreground underline underline-offset-4"
+                      variant="ghost"
+                      className="h-auto p-0 font-semibold text-foreground underline underline-offset-4 hover:bg-transparent"
                       onClick={switchFlow}
                     >
                       {flow === "signIn" ? "Sign up" : "Log in"}
-                    </button>
+                    </Button>
                   </p>
                 </>
               ) : (
