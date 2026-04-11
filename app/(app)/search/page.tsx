@@ -72,22 +72,24 @@ function FilterFields({
       <div className="space-y-1.5">
         <label className="text-sm font-medium">Category</label>
         <div className="flex flex-wrap gap-1.5">
-          <button
+          <Button
             type="button"
             onClick={() => setCategory("all")}
-            className={`rounded-full border px-3 py-1 text-xs font-medium transition ${category === "all" ? "border-primary bg-primary text-primary-foreground" : "hover:bg-muted"}`}
+            variant={category === "all" ? "default" : "outline"}
+            className="h-auto rounded-full px-3 py-1 text-xs font-medium"
           >
             All
-          </button>
+          </Button>
           {categoryOptions.map((cat) => (
-            <button
+            <Button
               key={cat.id}
               type="button"
               onClick={() => setCategory(cat.id)}
-              className={`rounded-full border px-3 py-1 text-xs font-medium transition ${category === cat.id ? "border-primary bg-primary text-primary-foreground" : "hover:bg-muted"}`}
+              variant={category === cat.id ? "default" : "outline"}
+              className="h-auto rounded-full px-3 py-1 text-xs font-medium"
             >
               {cat.name}
-            </button>
+            </Button>
           ))}
         </div>
       </div>
@@ -136,14 +138,15 @@ function FilterFields({
             { value: "swap", label: "Swap" },
             { value: "cash", label: "Cash" },
           ].map((item) => (
-            <button
+            <Button
               key={item.value}
               type="button"
-              className={`rounded-full border px-3 py-1 transition ${paymentType === item.value ? "border-primary bg-primary text-primary-foreground" : "hover:bg-muted"}`}
+              variant={paymentType === item.value ? "default" : "outline"}
+              className="h-auto rounded-full px-3 py-1"
               onClick={() => setPaymentType(item.value)}
             >
               {item.label}
-            </button>
+            </Button>
           ))}
         </div>
       </div>
@@ -156,14 +159,15 @@ function FilterFields({
             { value: "new", label: "New" },
             { value: "used", label: "Used" },
           ].map((item) => (
-            <button
+            <Button
               key={item.label}
               type="button"
-              className={`rounded-full border px-3 py-1 transition ${condition === item.value ? "border-primary bg-primary text-primary-foreground" : "hover:bg-muted"}`}
+              variant={condition === item.value ? "default" : "outline"}
+              className="h-auto rounded-full px-3 py-1"
               onClick={() => setCondition(item.value)}
             >
               {item.label}
-            </button>
+            </Button>
           ))}
         </div>
       </div>

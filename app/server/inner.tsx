@@ -2,6 +2,7 @@
 
 import { Preloaded, useMutation, usePreloadedQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
+import { Button } from "@/components/ui/button";
 
 export default function Home({
   preloaded,
@@ -23,14 +24,15 @@ export default function Home({
           </pre>
         </code>
       </div>
-      <button
-        className="mx-auto cursor-pointer rounded-lg bg-slate-700 px-6 py-3 font-medium text-white shadow-md transition-all duration-200 hover:bg-slate-800 hover:shadow-lg dark:bg-slate-600 dark:hover:bg-slate-500"
+      <Button
+        type="button"
+        className="mx-auto cursor-pointer bg-slate-700 px-6 py-3 font-medium text-white shadow-md transition-all duration-200 hover:bg-slate-800 hover:shadow-lg dark:bg-slate-600 dark:hover:bg-slate-500"
         onClick={() => {
           void clearMyNotifications({});
         }}
       >
         Clear my notifications
-      </button>
+      </Button>
     </>
   );
 }

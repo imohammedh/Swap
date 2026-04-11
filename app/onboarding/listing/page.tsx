@@ -376,21 +376,22 @@ export default function ListingOnboardingPage() {
                   {categoryOptions
                     .filter((category) => category.id !== "all")
                     .map((category) => (
-                      <button
+                      <Button
                         key={category.id}
                         type="button"
+                        variant="outline"
                         onClick={() => {
                           clearFieldError("categoryId");
                           setCategoryId(category.id);
                         }}
-                        className={`flex items-center gap-2 rounded-lg border p-3 text-left ${
+                        className={`h-auto justify-start rounded-lg p-3 text-left ${
                           categoryId === category.id
                             ? "border-primary bg-primary/10"
                             : "bg-card"
                         }`}
                       >
                         <span>{category.name}</span>
-                      </button>
+                      </Button>
                     ))}
                 </div>
                 <FieldError message={fieldErrors.categoryId} />
@@ -574,10 +575,12 @@ export default function ListingOnboardingPage() {
                             Cover
                           </span>
                         )}
-                        <button
+                        <Button
                           type="button"
+                          size="icon"
+                          variant="ghost"
                           onClick={() => removeFile(index)}
-                          className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-black/60 text-white hover:bg-destructive transition-colors"
+                          className="absolute right-1 top-1 h-5 w-5 rounded-full bg-black/60 p-0 text-white transition-colors hover:bg-destructive hover:text-white"
                         >
                           <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -593,7 +596,7 @@ export default function ListingOnboardingPage() {
                             <line x1="18" y1="6" x2="6" y2="18" />
                             <line x1="6" y1="6" x2="18" y2="18" />
                           </svg>
-                        </button>
+                        </Button>
                       </div>
                     ))}
                   </div>
