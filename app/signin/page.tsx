@@ -26,7 +26,7 @@ import SwapLogo from "@/public/favicon.svg";
 const heroImage =
   "https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?auto=format&fit=crop&w=1400&q=80";
 
-// ─── Zod Schemas ────────────────────────────────────────────────────────────
+//  Zod Schemas
 
 const emailSchema = z
   .string()
@@ -73,11 +73,11 @@ const verificationCodeSchema = z.object({
     .regex(/^\d+$/, "Code must contain only numbers"),
 });
 
-// ─── Types ───────────────────────────────────────────────────────────────────
+// Types
 
 type FieldErrors = Partial<Record<string, string>>;
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
+//  Helpers
 
 function parseZodErrors(error: z.ZodError): FieldErrors {
   return error.issues.reduce<FieldErrors>((acc, issue) => {
@@ -135,14 +135,14 @@ function getFriendlyAuthError(
   return "Something went wrong. Please try again.";
 }
 
-// ─── Field Error Component ────────────────────────────────────────────────────
+//  Field Error Component ─
 
 function FieldError({ message }: { message?: string }) {
   if (!message) return null;
   return <p className="text-xs text-destructive mt-1">{message}</p>;
 }
 
-// ─── Component ───────────────────────────────────────────────────────────────
+//  Component
 
 export default function SignIn() {
   const { signIn } = useAuthActions();
