@@ -1,5 +1,5 @@
 "use client";
-import MaxWidth from "@/components/max-width"
+import MaxWidth from "@/components/max-width";
 import imgsrc from "@/public/favicon.svg";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
@@ -13,7 +13,6 @@ export default function Error({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
-
   const errorMessage =
     error.message && error.message.length < 20
       ? error.message
@@ -41,18 +40,6 @@ export default function Error({
             </div>
           </CardContent>
         </Card>
-        <div className="w-full flex justify-center items-center py-2">
-          <Image
-            src={imgsrc}
-            alt="Swap Logo"
-            priority
-            width={20}
-            height={20}
-          />
-          <p className="text-muted-foreground text-xs font-medium px-2">
-            {` ! Hi this is Swap team we're sorry | Hit The Try Again Button `}
-          </p>
-        </div>
       </MaxWidth>
     </section>
   );
