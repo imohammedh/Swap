@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Button } from "../components/ui/button";
 import imgsrc from "@/public/favicon.svg";
 import Image from "next/image";
-import MaxWidth from "@/components/max-width";
+import MaxWidth from "@/components/max-width"
 import { Card, CardContent } from "@/components/ui/card";
 
 export default function NotFound() {
@@ -28,6 +28,18 @@ export default function NotFound() {
             </div>
           </CardContent>
         </Card>
+        <div className="w-full flex justify-center items-center py-5">
+          <Image
+            src={imgsrc}
+            alt="Swap Logo"
+            priority
+            width={20}
+            height={20}
+          />
+          <p className="text-muted-foreground text-xs font-medium px-2">
+            {` ! Hi this is Swap team we're really sorry for this `}
+          </p>
+        </div>
       </MaxWidth>
     </section>
   );
