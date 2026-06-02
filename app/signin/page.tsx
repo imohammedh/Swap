@@ -80,7 +80,7 @@ type FieldErrors = Partial<Record<string, string>>;
 //  Helpers
 
 function parseZodErrors(error: z.ZodError): FieldErrors {
-  return error.issues.reduce<FieldErrors|any>((acc, issue) => {
+  return error.issues.reduce<FieldErrors>((acc: any, issue) => {
     const key = issue.path[0] as string;
     if (!acc[key]) acc[key] = issue.message;
     return acc;
@@ -172,7 +172,7 @@ export default function SignIn() {
   // Clear a single field error when the user starts typing
   const clearFieldError = (field: string) => {
     if (fieldErrors[field]) {
-      setFieldErrors((prev:any) => ({ ...prev, [field]: undefined }));
+      setFieldErrors((prev: any) => ({ ...prev, [field]: undefined }));
     }
   };
 
@@ -373,7 +373,7 @@ export default function SignIn() {
                           />
                           <Input
                             value={name}
-                            onChange={(e:any) => {
+                            onChange={(e: any) => {
                               setName(e.target.value);
                               clearFieldError("name");
                             }}
@@ -398,7 +398,7 @@ export default function SignIn() {
                         />
                         <Input
                           value={email}
-                          onChange={(e:any) => {
+                          onChange={(e: any) => {
                             setEmail(e.target.value);
                             clearFieldError("email");
                           }}
@@ -423,7 +423,7 @@ export default function SignIn() {
                         />
                         <Input
                           value={password}
-                          onChange={(e:any) => {
+                          onChange={(e: any) => {
                             setPassword(e.target.value);
                             clearFieldError("password");
                           }}
@@ -443,7 +443,7 @@ export default function SignIn() {
                           type="button"
                           size="icon"
                           variant="ghost"
-                          onClick={() => setShowPassword((v:any) => !v)}
+                          onClick={() => setShowPassword((v: any) => !v)}
                           className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                           aria-label={
                             showPassword ? "Hide password" : "Show password"
@@ -517,7 +517,7 @@ export default function SignIn() {
                       className={`h-11 tracking-widest text-center text-lg font-mono ${fieldErrors.code ? "border-destructive focus-visible:ring-destructive" : ""}`}
                       placeholder="000000"
                       value={code}
-                      onChange={(e:any) => {
+                      onChange={(e: any) => {
                         // Only allow digits
                         const digits = e.target.value
                           .replace(/\D/g, "")

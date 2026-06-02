@@ -27,6 +27,12 @@ import {
 } from "@/components/ui/select";
 import { categoryNameById, categoryOptions } from "@/lib/categories";
 import { egyptCities } from "@/lib/egypt-cities";
+import {
+  getCategoryName,
+  localizePath,
+  useLocale,
+  useT,
+} from "@/lib/i18n";
 
 function formatEgp(value: number) {
   return `${new Intl.NumberFormat("en-US").format(value)} EGP`;
@@ -67,10 +73,13 @@ function FilterFields({
   onApply: () => void;
   onClear: () => void;
 }) {
+  const locale = useLocale();
+  const t = useT();
+
   return (
     <div className="space-y-4">
       <div className="space-y-1.5">
-        <label className="text-sm font-medium">Category</label>
+        <label className="text-sm font-medium">{t("Category")}</label>
         <div className="flex flex-wrap gap-1.5">
           <Button
             type="button"
@@ -78,7 +87,7 @@ function FilterFields({
             variant={category === "all" ? "default" : "outline"}
             className="h-auto rounded-full px-3 py-1 text-xs font-medium"
           >
-            All
+            {t("All")}
           </Button>
           {categoryOptions.map((cat) => (
             <Button
@@ -88,20 +97,20 @@ function FilterFields({
               variant={category === cat.id ? "default" : "outline"}
               className="h-auto rounded-full px-3 py-1 text-xs font-medium"
             >
-              {cat.name}
+              {getCategoryName(cat.id, locale) ?? cat.name}
             </Button>
           ))}
         </div>
       </div>
       <div className="space-y-1.5">
-        <label className="text-sm font-medium">Location</label>
+        <label className="text-sm font-medium">{t("Location")}</label>
         <Select value={location} onValueChange={setLocation}>
           <SelectTrigger className="w-full">
-            <SelectValue placeholder="All cities" />
+            <SelectValue placeholder={t("All cities")} />
           </SelectTrigger>
           <SelectContent>
             <div className="max-h-[220px] overflow-y-auto">
-              <SelectItem value="all">All cities</SelectItem>
+              <SelectItem value="all">{t("All cities")}</SelectItem>
               {egyptCities.map((city) => (
                 <SelectItem key={city} value={city}>
                   {city}
@@ -113,16 +122,16 @@ function FilterFields({
       </div>
 
       <div className="space-y-1.5">
-        <label className="text-sm font-medium">Price range</label>
+        <label className="text-sm font-medium">{t("Price range")}</label>
         <div className="grid grid-cols-2 gap-2">
           <Input
-            placeholder="From EGP"
+            placeholder={t("From EGP")}
             type="number"
             value={minPrice}
             onChange={(e) => setMinPrice(e.target.value)}
           />
           <Input
-            placeholder="To EGP"
+            placeholder={t("To EGP")}
             type="number"
             value={maxPrice}
             onChange={(e) => setMaxPrice(e.target.value)}
@@ -131,12 +140,12 @@ function FilterFields({
       </div>
 
       <div className="space-y-1.5">
-        <label className="text-sm font-medium">Payment type</label>
+        <label className="text-sm font-medium">{t("Payment type")}</label>
         <div className="flex gap-2 text-sm flex-wrap">
           {[
-            { value: "both", label: "All" },
-            { value: "swap", label: "Swap" },
-            { value: "cash", label: "Cash" },
+            { value: "both", label: t("All") },
+            { value: "swap", label: t("Swap") },
+            { value: "cash", label: t("Cash") },
           ].map((item) => (
             <Button
               key={item.value}
@@ -152,12 +161,12 @@ function FilterFields({
       </div>
 
       <div className="space-y-1.5">
-        <label className="text-sm font-medium">Condition</label>
+        <label className="text-sm font-medium">{t("Condition")}</label>
         <div className="flex gap-2 text-sm flex-wrap">
           {[
-            { value: "", label: "All" },
-            { value: "new", label: "New" },
-            { value: "used", label: "Used" },
+            { value: "", label: t("All") },
+            { value: "new", label: t("New") },
+            { value: "used", label: t("Used") },
           ].map((item) => (
             <Button
               key={item.label}
@@ -173,24 +182,24 @@ function FilterFields({
       </div>
 
       <div className="space-y-1.5">
-        <label className="text-sm font-medium">Sort by</label>
+        <label className="text-sm font-medium">{t("Sort by")}</label>
         <Select value={sort} onValueChange={setSort}>
           <SelectTrigger className="w-full">
-            <SelectValue placeholder="Newest" />
+            <SelectValue placeholder={t("Newest")} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="newest">Newest</SelectItem>
-            <SelectItem value="price-asc">Price low to high</SelectItem>
-            <SelectItem value="price-desc">Price high to low</SelectItem>
+            <SelectItem value="newest">{t("Newest")}</SelectItem>
+            <SelectItem value="price-asc">{t("Price low to high")}</SelectItem>
+            <SelectItem value="price-desc">{t("Price high to low")}</SelectItem>
           </SelectContent>
         </Select>
       </div>
 
       <div className="grid grid-cols-2 gap-2">
         <Button variant="outline" onClick={onClear}>
-          Clear all
+          {t("Clear all")}
         </Button>
-        <Button onClick={onApply}>Apply</Button>
+        <Button onClick={onApply}>{t("Apply")}</Button>
       </div>
     </div>
   );
@@ -199,6 +208,8 @@ function FilterFields({
 export default function SearchPage() {
   const params = useSearchParams();
   const router = useRouter();
+  const locale = useLocale();
+  const t = useT();
 
   const q = params.get("q") ?? "";
   const [category, setCategory] = useState(params.get("category") ?? "all");
@@ -241,7 +252,8 @@ export default function SearchPage() {
     return next.toString();
   };
 
-  const applyFilters = () => router.replace(`/search?${buildParams()}`);
+  const applyFilters = () =>
+    router.replace(localizePath(`/search?${buildParams()}`, locale));
 
   const clearFilters = () => {
     setLocation("all");
@@ -254,9 +266,9 @@ export default function SearchPage() {
 
   const filterProps = {
     category,
-    setCategory: (id: string) => {
+      setCategory: (id: string) => {
       setCategory(id);
-      router.replace(`/search?${buildParams({ category: id })}`);
+      router.replace(localizePath(`/search?${buildParams({ category: id })}`, locale));
     },
     location,
     setLocation,
@@ -283,7 +295,7 @@ export default function SearchPage() {
           <Card className="hidden lg:block h-fit ">
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2 text-base">
-                <SlidersHorizontal size={15} /> Filters
+                <SlidersHorizontal size={15} /> {t("Filters")}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -297,16 +309,18 @@ export default function SearchPage() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <p className="text-sm text-muted-foreground">
-                  {sorted.length} result(s)
+                  {sorted.length} {t("result(s)")}
                 </p>
-                <Badge variant="outline">{categoryNameById(category)}</Badge>
+                <Badge variant="outline">
+                  {getCategoryName(category, locale) ?? categoryNameById(category)}
+                </Badge>
               </div>
 
               {/* Mobile filter dropdown */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button size="sm" className="gap-2 lg:hidden">
-                    <SlidersHorizontal size={14} /> Filters
+                    <SlidersHorizontal size={14} /> {t("Filters")}
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent
@@ -321,7 +335,10 @@ export default function SearchPage() {
 
             {/* Listing cards */}
             {sorted.map((product) => (
-              <Link key={product._id} href={`/products/${product.slug}`}>
+              <Link
+                key={product._id}
+                href={localizePath(`/products/${product.slug}`, locale)}
+              >
                 <article className="grid mb-3 overflow-hidden rounded-xl border bg-card transition hover:shadow-md md:grid-cols-[280px_1fr]">
                   <div className="relative h-44 md:h-full">
                     <Image
@@ -353,7 +370,7 @@ export default function SearchPage() {
             {sorted.length === 0 && (
               <Card>
                 <CardContent className="p-12 text-center text-muted-foreground">
-                  No Results Found
+                  {t("No Results Found")}
                 </CardContent>
               </Card>
             )}

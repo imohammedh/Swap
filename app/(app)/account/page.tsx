@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
+import { useT } from "@/lib/i18n";
 
 function getInitials(name: string | null | undefined) {
   if (!name) return "U";
@@ -24,6 +25,7 @@ function getInitials(name: string | null | undefined) {
 }
 
 export default function AccountPage() {
+  const t = useT();
   const router = useRouter();
   const { isAuthenticated } = useConvexAuth();
 
@@ -89,7 +91,7 @@ export default function AccountPage() {
       body: imageFile,
     });
     if (!response.ok) {
-      throw new Error("Failed to upload image");
+      throw new Error(t("Failed to upload image"));
     }
     const { storageId } = await response.json();
     return storageId;
@@ -106,14 +108,14 @@ export default function AccountPage() {
         phone: phone.trim() || undefined,
         imageStorageId: storageId,
       });
-      toast({ title: "Saved", description: "Profile updated successfully!" });
+      toast({ title: t("Saved"), description: t("Profile updated successfully!") });
       setEditing(false);
     } catch (err) {
       toast({
         variant: "destructive",
-        title: "Update failed",
+        title: t("Update failed"),
         description:
-          err instanceof Error ? err.message : "Failed to update profile",
+          err instanceof Error ? err.message : t("Failed to update profile"),
       });
     } finally {
       setSaving(false);
@@ -125,14 +127,14 @@ export default function AccountPage() {
       <Card>
         <CardHeader>
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-            <CardTitle>Profile Information</CardTitle>
+            <CardTitle>{t("Profile Information")}</CardTitle>
             <Button
               variant="outline"
               size="sm"
               onClick={() => setEditing(!editing)}
             >
               <Pencil size={14} className="mr-1" />
-              {editing ? "Cancel" : "Edit"}
+              {editing ? t("Cancel") : t("Edit")}
             </Button>
           </div>
         </CardHeader>
@@ -140,24 +142,24 @@ export default function AccountPage() {
           {editing ? (
             <form onSubmit={handleSubmit} className="space-y-4 min-w-0">
               <div>
-                <label className="mb-2 block text-sm font-medium">Name</label>
+                <label className="mb-2 block text-sm font-medium">{t("Name")}</label>
                 <Input
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="Your name"
+                  placeholder={t("Your name")}
                 />
               </div>
               <div>
-                <label className="mb-2 block text-sm font-medium">Phone</label>
+                <label className="mb-2 block text-sm font-medium">{t("Phone")}</label>
                 <Input
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  placeholder="Your phone number"
+                  placeholder={t("Your phone number")}
                 />
               </div>
               <div>
                 <label className="mb-2 block text-sm font-medium">
-                  Profile Image
+                  {t("Profile Image")}
                 </label>
                 <Input
                   type="file"
@@ -166,7 +168,7 @@ export default function AccountPage() {
                 />
               </div>
               <Button type="submit" disabled={saving}>
-                {saving ? "Saving..." : "Save Changes"}
+                {saving ? t("Saving...") : t("Save Changes")}
               </Button>
             </form>
           ) : (
@@ -175,7 +177,7 @@ export default function AccountPage() {
                 <Avatar className="h-16 w-16">
                   <AvatarImage
                     src={me?.image ?? undefined}
-                    alt={me?.name ?? "User"}
+                    alt={me?.name ?? t("User")}
                   />
                   <AvatarFallback className="bg-primary/10 text-primary text-lg font-bold">
                     {initials}
@@ -183,7 +185,7 @@ export default function AccountPage() {
                 </Avatar>
                 <div>
                   <p className="truncate font-medium">
-                    {me?.name || "No name set"}
+                    {me?.name || t("No name set")}
                   </p>
                   <p className="truncate text-sm text-muted-foreground">
                     {me?.email}
@@ -192,9 +194,9 @@ export default function AccountPage() {
               </div>
               <div className="space-y-2">
                 <div>
-                  <span className="truncate font-medium">Phone: </span>
+                  <span className="truncate font-medium">{t("Phone")}: </span>
                   <span className="text-muted-foreground">
-                    {me?.phone || "Not set"}
+                    {me?.phone || t("Not set")}
                   </span>
                 </div>
               </div>
@@ -208,16 +210,16 @@ export default function AccountPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Megaphone size={18} />
-              Notifications
+              {t("Notifications")}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="mb-2 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <p className="truncate text-sm text-muted-foreground">
-                Your latest updates
+                {t("Your latest updates")}
               </p>
               <label className="flex cursor-pointer select-none items-center gap-2 text-xs text-muted-foreground">
-                Unread only
+                {t("Unread only")}
                 <input
                   type="checkbox"
                   checked={unreadOnly}
@@ -234,13 +236,13 @@ export default function AccountPage() {
               onClick={() => void markAllRead({})}
               disabled={!isAuthenticated}
             >
-              Mark all as read
+              {t("Mark all as read")}
             </Button>
 
             <div className="max-h-64 space-y-2 overflow-auto">
               {visibleNotifications.length === 0 ? (
                 <p className="py-8 text-center text-sm text-muted-foreground">
-                  No New Updates
+                  {t("No New Updates")}
                 </p>
               ) : (
                 visibleNotifications.map((item) => (

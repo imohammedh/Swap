@@ -1,13 +1,41 @@
-﻿import Link from "next/link";
+"use client";
+
+import Image from "next/image";
+import Link from "next/link";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import MaxWidth from "@/components/max-width";
-import Image from "next/image";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { localizePath, useLocale, useT } from "@/lib/i18n";
 import SwapLogo from "@/public/favicon.svg";
+
 const START_YEAR = 2025;
+const LOCALE_COOKIE = "swap-language";
 
 export default function AppFooter() {
+  const pathname = usePathname();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const t = useT();
   const year = new Date().getFullYear();
-  const yearText = year > START_YEAR ? `${START_YEAR}–${year}` : `${year}`;
+  const yearText = year > START_YEAR ? `${START_YEAR}-${year}` : `${year}`;
+  const currentLocale = useLocale();
+  const homeHref = localizePath("/", currentLocale);
+  const searchHref = localizePath("/search", currentLocale);
+
+  const handleLocaleChange = (locale: "en" | "ar") => {
+    document.cookie = `${LOCALE_COOKIE}=${locale}; path=/; max-age=31536000; samesite=lax`;
+
+    const query = searchParams.toString();
+    const nextPath = localizePath(pathname, locale);
+    router.push(query ? `${nextPath}?${query}` : nextPath);
+  };
 
   return (
     <footer className="border-t bg-card/70">
@@ -15,13 +43,13 @@ export default function AppFooter() {
         <div className="grid gap-10 md:grid-cols-4">
           <div className="md:col-span-1">
             <Link
-              href="/"
+              href={homeHref}
               className="text-lg  font-black tracking-tight text-primary"
             >
               <Image src={SwapLogo} width={40} height={40} alt="Swap logo" />
             </Link>
             <p className="mt-3 max-w-xs text-sm leading-relaxed font-bold text-muted-foreground">
-              Trade smarter, locally.
+              {t("Trade smarter, locally.")}
             </p>
           </div>
 
@@ -29,17 +57,17 @@ export default function AppFooter() {
             <div className="grid gap-8 sm:grid-cols-3">
               <div>
                 <h3 className="text-sm font-semibold text-foreground">
-                  Company
+                  {t("Company")}
                 </h3>
                 <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
                   <li>
-                    <Link href="/" className="hover:text-foreground">
-                      About
+                    <Link href={homeHref} className="hover:text-foreground">
+                      {t("About")}
                     </Link>
                   </li>
                   <li>
-                    <Link href="/search" className="hover:text-foreground">
-                      Browse
+                    <Link href={searchHref} className="hover:text-foreground">
+                      {t("Browse")}
                     </Link>
                   </li>
                 </ul>
@@ -98,19 +126,32 @@ export default function AppFooter() {
 
         <div className="mt-5 border-t border-primary/20 pt-5 flex flex-col sm:flex-row justify-between items-center gap-4">
           <div className="text-start text-muted-foreground text-sm">
-            Copyright © 2025-{new Date().getFullYear()} Swap. All rights
-            reserved.
+            Copyright © {yearText} Swap. {t("All rights reserved.")}
           </div>
-          <p className="text-start text-muted-foreground text-sm">
-            Designed and built by{" "}
-            <Link
-              href="https://www.mohammedh.dev/"
-              className="hover:underline"
-              target="_blank"
-            >
-              @Mohammed H.
-            </Link>
-          </p>
+          <div className="flex items-center items-center gap-4">
+            <p className="text-start text-muted-foreground text-sm">
+              {t("Designed and built by")}{" "}
+              <Link
+                href="https://www.mohammedh.dev/"
+                className="hover:underline"
+                target="_blank"
+              >
+                @Mohammed H.
+              </Link>
+            </p>
+            <Select value={currentLocale} onValueChange={handleLocaleChange}>
+              <SelectTrigger
+                aria-label={t("Select language")}
+                className="w-36 bg-background"
+              >
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent align="end">
+                <SelectItem value="en">English</SelectItem>
+                <SelectItem value="ar">العربية</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </MaxWidth>
     </footer>
