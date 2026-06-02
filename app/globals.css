@@ -38,6 +38,7 @@
   --sidebar-border: #d9d9d9;
   --sidebar-ring: #e05d38;
   --font-sans: Inter, sans-serif;
+  --font-arabic: "Noto Sans Arabic", "Segoe UI", Tahoma, Arial, sans-serif;
   --font-serif: Source Serif 4, serif;
   --font-mono: JetBrains Mono, monospace;
   --radius: 0.75rem;
@@ -93,6 +94,7 @@
   --sidebar-border: #3d4354;
   --sidebar-ring: #e05d38;
   --font-sans: Inter, sans-serif;
+  --font-arabic: "Noto Sans Arabic", "Segoe UI", Tahoma, Arial, sans-serif;
   --font-serif: Source Serif 4, serif;
   --font-mono: JetBrains Mono, monospace;
   --radius: 0.75rem;
@@ -147,6 +149,7 @@
   --color-sidebar-ring: var(--sidebar-ring);
 
   --font-sans: var(--font-sans);
+  --font-arabic: var(--font-arabic);
   --font-mono: var(--font-mono);
   --font-serif: var(--font-serif);
 
@@ -169,6 +172,82 @@ html {
   scroll-padding: 100px;
   scroll-behavior: smooth;
   scrollbar-width: thin;
+}
+
+html.locale-ar,
+:where([dir="rtl"]) {
+  font-family: var(--font-arabic);
+  font-size: 16.5px;
+  line-height: 1.75;
+  letter-spacing: 0;
+  text-rendering: optimizeLegibility;
+}
+
+html.locale-ar body {
+  font-family: var(--font-arabic);
+}
+
+:where([dir="rtl"]) :is(h1, h2, h3, h4, h5, h6) {
+  line-height: 1.35;
+  letter-spacing: 0;
+}
+
+:where([dir="rtl"]) :is(button, input, textarea, select) {
+  font-family: var(--font-arabic);
+  letter-spacing: 0;
+}
+
+:where([dir="rtl"]) .text-left {
+  text-align: right;
+}
+
+:where([dir="rtl"]) .text-right {
+  text-align: left;
+}
+
+:where([dir="rtl"]) .text-xs {
+  font-size: 0.8125rem;
+  line-height: 1.45rem;
+}
+
+:where([dir="rtl"]) .text-sm {
+  font-size: 0.9375rem;
+  line-height: 1.6rem;
+}
+
+:where([dir="rtl"]) .text-base {
+  font-size: 1.0625rem;
+  line-height: 1.85rem;
+}
+
+:where([dir="rtl"]) .text-lg {
+  font-size: 1.1875rem;
+  line-height: 2rem;
+}
+
+:where([dir="rtl"]) .text-xl {
+  font-size: 1.3125rem;
+  line-height: 2.15rem;
+}
+
+:where([dir="rtl"]) .text-2xl {
+  font-size: 1.625rem;
+  line-height: 2.45rem;
+}
+
+:where([dir="rtl"]) .text-3xl {
+  font-size: 2rem;
+  line-height: 2.85rem;
+}
+
+:where([dir="rtl"]) .text-4xl {
+  font-size: 2.45rem;
+  line-height: 3.35rem;
+}
+
+:where([dir="rtl"]) .text-5xl {
+  font-size: 3.15rem;
+  line-height: 4.1rem;
 }
 
 @layer base {

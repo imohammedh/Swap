@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { ConvexAuthNextjsServerProvider } from "@convex-dev/auth/nextjs/server";
 
 import ConvexClientProvider from "@/components/ConvexClientProvider";
+import LocaleDocumentSync from "@/components/locale-document-sync";
 import ThemeProvider from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/toaster";
 import { getMetadata } from "@/lib/seo";
@@ -18,6 +19,7 @@ export default function RootLayout({
     <ConvexAuthNextjsServerProvider>
       <html lang="en" suppressHydrationWarning className="font-sans">
         <body className="antialiased">
+          <LocaleDocumentSync />
           <ConvexClientProvider>
             <ThemeProvider>
               {children}
