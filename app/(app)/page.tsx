@@ -75,6 +75,20 @@ const categoryIcons = {
   kids: Baby,
 } as const;
 
+function getHorizontalScrollState(node: HTMLElement, isRtl: boolean) {
+  const maxScrollLeft = Math.max(0, node.scrollWidth - node.clientWidth);
+  const currentScrollLeft = isRtl ? Math.abs(node.scrollLeft) : node.scrollLeft;
+
+  return {
+    canScrollLeft: isRtl
+      ? currentScrollLeft < maxScrollLeft - 1
+      : currentScrollLeft > 1,
+    canScrollRight: isRtl
+      ? currentScrollLeft > 1
+      : currentScrollLeft < maxScrollLeft - 1,
+  };
+}
+
 function HorizontalSlider({
   children,
   scrollAmount = 720,
@@ -89,9 +103,10 @@ function HorizontalSlider({
   const updateScrollState = useCallback(() => {
     const node = scrollerRef.current;
     if (!node) return;
-    const { scrollLeft, scrollWidth, clientWidth } = node;
-    setCanScrollLeft(scrollLeft > 0);
-    setCanScrollRight(scrollLeft + clientWidth < scrollWidth - 1);
+    const isRtl = getComputedStyle(node).direction === "rtl";
+    const nextState = getHorizontalScrollState(node, isRtl);
+    setCanScrollLeft(nextState.canScrollLeft);
+    setCanScrollRight(nextState.canScrollRight);
   }, []);
 
   useEffect(() => {
@@ -224,9 +239,10 @@ export default function Home() {
   const updateScrollState = () => {
     const node = categoryScrollerRef.current;
     if (!node) return;
-    const { scrollLeft, scrollWidth, clientWidth } = node;
-    setCanScrollLeft(scrollLeft > 0);
-    setCanScrollRight(scrollLeft + clientWidth < scrollWidth - 1);
+    const isRtl = locale === "ar";
+    const nextState = getHorizontalScrollState(node, isRtl);
+    setCanScrollLeft(nextState.canScrollLeft);
+    setCanScrollRight(nextState.canScrollRight);
   };
 
   useEffect(() => {
@@ -242,7 +258,7 @@ export default function Home() {
       node.removeEventListener("scroll", updateScrollState);
       ro.disconnect();
     };
-  }, []);
+  }, [locale]);
 
   const { isAuthenticated } = useConvexAuth();
   const router = useRouter();
