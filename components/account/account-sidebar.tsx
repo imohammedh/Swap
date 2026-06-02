@@ -19,6 +19,7 @@ import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { useConvexAuth } from "convex/react";
 import { useAuthActions } from "@convex-dev/auth/react";
+import { localizePath, useLocale, useT } from "@/lib/i18n";
 
 const navItems = [
   { href: "/account/offers", label: "Offers", icon: Ticket },
@@ -43,6 +44,8 @@ export default function AccountSidebar() {
   const { signOut } = useAuthActions();
   const { isAuthenticated } = useConvexAuth();
   const pathname = usePathname();
+  const locale = useLocale();
+  const t = useT();
   const me = useQuery(api.users.me, {});
 
   return (
@@ -52,7 +55,7 @@ export default function AccountSidebar() {
           {me?.image ? (
             <img
               src={me.image}
-              alt={me.name ?? "Profile"}
+              alt={me.name ?? t("Profile Information")}
               className="h-full w-full object-cover"
             />
           ) : (
@@ -60,12 +63,15 @@ export default function AccountSidebar() {
           )}
         </div>
         <p className="max-w-full truncate px-2 text-base font-bold sm:text-lg">
-          {me?.name ?? "Your account"}
+          {me?.name ?? t("Your account")}
         </p>
         <p className="flex items-center gap-1 text-xs text-muted-foreground"></p>
-        <Link href="/account/settings" className="w-full sm:w-auto">
+        <Link
+          href={localizePath("/account/settings", locale)}
+          className="w-full sm:w-auto"
+        >
           <Button variant="outline" size="sm" className="w-full sm:w-auto">
-            Manage Account
+            {t("Manage Account")}
           </Button>
         </Link>
       </div>
@@ -73,12 +79,15 @@ export default function AccountSidebar() {
       <nav className="space-y-1">
         {navItems.map((item) => {
           const Icon = item.icon;
-          const active = pathname === item.href;
+          const localizedHref = localizePath(item.href, locale);
+          const active =
+            pathname === localizedHref ||
+            pathname.replace(/^\/ar(?=\/|$)/, "") === item.href;
 
           return (
             <Link
               key={item.href}
-              href={item.href}
+              href={localizedHref}
               className={cn(
                 "flex items-center gap-3 rounded-md border-l-2 px-3 py-2.5 text-sm font-medium transition-all duration-150",
                 active
@@ -87,7 +96,7 @@ export default function AccountSidebar() {
               )}
             >
               <Icon size={16} />
-              {item.label}
+              {t(item.label)}
             </Link>
           );
         })}
@@ -98,10 +107,12 @@ export default function AccountSidebar() {
         variant="outline"
         className=" w-full hover:bg-destructive hover:text-primary-foreground"
         onClick={() => {
-          void signOut().then(() => router.push("/signin"));
+          void signOut().then(() =>
+            router.push(localizePath("/signin", locale)),
+          );
         }}
       >
-        Sign out
+        {t("Sign out")}
       </Button>
     </aside>
   );

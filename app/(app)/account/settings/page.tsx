@@ -8,8 +8,10 @@ import { api } from "@/convex/_generated/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { useT } from "@/lib/i18n";
 
 export default function SettingsPage() {
+  const t = useT();
   const me = useQuery(api.users.me, {});
   const updateProfile = useMutation(api.users.updateProfile);
   const generateUploadUrl = useMutation(api.files.generateUploadUrl);
@@ -37,7 +39,7 @@ export default function SettingsPage() {
       body: imageFile,
     });
     if (!response.ok) {
-      throw new Error("Failed to upload image");
+      throw new Error(t("Failed to upload image"));
     }
     const { storageId } = await response.json();
     return storageId;
@@ -56,9 +58,9 @@ export default function SettingsPage() {
         phone: phone.trim() || undefined,
         imageStorageId: storageId,
       });
-      setSuccess("Profile updated successfully!");
+      setSuccess(t("Profile updated successfully!"));
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to update profile");
+      setError(err instanceof Error ? err.message : t("Failed to update profile"));
     } finally {
       setSaving(false);
     }
@@ -67,7 +69,7 @@ export default function SettingsPage() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Profile Settings</CardTitle>
+        <CardTitle>{t("Profile Settings")}</CardTitle>
       </CardHeader>
       <CardContent>
         {error && (
@@ -83,23 +85,25 @@ export default function SettingsPage() {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="mb-2 block text-sm font-medium">Name</label>
+            <label className="mb-2 block text-sm font-medium">{t("Name")}</label>
             <Input
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Your name"
+              placeholder={t("Your name")}
             />
           </div>
           <div>
-            <label className="mb-2 block text-sm font-medium">Phone</label>
+            <label className="mb-2 block text-sm font-medium">{t("Phone")}</label>
             <Input
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
-              placeholder="Your phone number"
+              placeholder={t("Your phone number")}
             />
           </div>
           <div>
-            <label className="mb-2 block text-sm font-medium">Profile Image</label>
+            <label className="mb-2 block text-sm font-medium">
+              {t("Profile Image")}
+            </label>
             <Input
               type="file"
               accept="image/*"
@@ -107,7 +111,7 @@ export default function SettingsPage() {
             />
           </div>
           <Button type="submit" disabled={saving} className="w-full sm:w-auto">
-            {saving ? "Saving..." : "Save Changes"}
+            {saving ? t("Saving...") : t("Save Changes")}
           </Button>
         </form>
       </CardContent>

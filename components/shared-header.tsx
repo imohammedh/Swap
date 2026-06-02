@@ -45,6 +45,7 @@ import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Image from "next/image";
 import SwapLogo from "@/public/favicon.svg";
+import { localizePath, useLocale, useT } from "@/lib/i18n";
 
 const ThemeToggle = dynamic(() => import("@/components/theme-toggle"), {
   ssr: false,
@@ -71,6 +72,8 @@ function initials(name: string | null | undefined) {
 export default function SharedHeader() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const locale = useLocale();
+  const t = useT();
   const { resolvedTheme, setTheme } = useTheme();
   const { isAuthenticated, isLoading } = useConvexAuth();
   const { signOut } = useAuthActions();
@@ -110,7 +113,7 @@ export default function SharedHeader() {
     const href = getNotificationHref(item);
     if (!href) return;
     setNotifOpen(false);
-    router.push(href);
+    router.push(localizePath(href, locale));
   };
 
   // Close notification panel on outside click
@@ -138,18 +141,20 @@ export default function SharedHeader() {
     } else {
       params.delete("q");
     }
-    router.push(`/search?${params.toString()}`);
+    router.push(localizePath(`/search?${params.toString()}`, locale));
   };
 
   const handleCreateListing = () => {
-    router.push("/onboarding/listing");
+    router.push(localizePath("/onboarding/listing", locale));
   };
+
+  const go = (href: string) => router.push(localizePath(href, locale));
 
   return (
     <header className="relative top-0 bg-card p-3 shadow-sm md:p-4">
       <MaxWidth className="flex flex-wrap items-center gap-3 md:gap-4">
         <Link
-          href="/"
+          href={localizePath("/", locale)}
           className="text-lg flex justify-center items-center gap-2 font-black tracking-tight text-primary"
         >
           <Image src={SwapLogo} width={40} height={40} alt="Swap logo" />
@@ -161,7 +166,7 @@ export default function SharedHeader() {
             className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
           />
           <Input
-            placeholder="Search products, locations, categories..."
+            placeholder={t("Search products, locations, categories...")}
             value={searchTerm}
             onChange={(event) => setSearchTerm(event.target.value)}
             className="h-11 pl-10"
@@ -173,7 +178,7 @@ export default function SharedHeader() {
           onClick={handleCreateListing}
           className="hidden h-11 rounded-full px-5 md:inline-flex"
         >
-          <Upload size={16} /> Create listing
+          <Upload size={16} /> {t("Create listing")}
         </Button>
 
         {/* Desktop: theme toggle */}
@@ -188,23 +193,23 @@ export default function SharedHeader() {
             className="hidden h-11 rounded-full md:inline-flex"
             disabled
           >
-            <User size={16} /> Account
+            <User size={16} /> {t("Account")}
           </Button>
         ) : isAuthenticated ? (
           <Button
             variant="outline"
             className="hidden h-11 rounded-full md:inline-flex"
-            onClick={() => router.push("/account")}
+            onClick={() => go("/account")}
           >
-            <User size={16} /> Account
+            <User size={16} /> {t("Account")}
           </Button>
         ) : (
           <Button
             variant="outline"
             className="hidden h-11 rounded-full md:inline-flex"
-            onClick={() => router.push("/signin")}
+            onClick={() => go("/signin")}
           >
-            <User size={16} /> Sign in
+            <User size={16} /> {t("Sign in")}
           </Button>
         )}
 
@@ -272,7 +277,7 @@ export default function SharedHeader() {
                 <Avatar className="h-11 w-11">
                   <AvatarImage
                     src={me?.image ?? undefined}
-                    alt={me?.name ?? "User"}
+                    alt={me?.name ?? t("User")}
                   />
                   <AvatarFallback className="bg-primary/10 text-primary text-sm font-bold">
                     {initials(me?.name)}
@@ -280,20 +285,20 @@ export default function SharedHeader() {
                 </Avatar>
                 <div className="min-w-0">
                   <p className="truncate font-semibold">
-                    {me?.name ?? "Your account"}
+                    {me?.name ?? t("Your account")}
                   </p>
                 </div>
               </div>
             </DropdownMenuLabel>
 
             {/* Account */}
-            <DropdownMenuItem onClick={() => router.push("/account")}>
-              <User size={16} /> Manage Account
+            <DropdownMenuItem onClick={() => go("/account")}>
+              <User size={16} /> {t("Manage Account")}
             </DropdownMenuItem>
 
             {/* Create listing â€” mobile only */}
             <DropdownMenuItem onClick={handleCreateListing}>
-              <Upload size={16} /> Create listing
+              <Upload size={16} /> {t("Create listing")}
             </DropdownMenuItem>
 
             {/* Theme */}
@@ -307,7 +312,7 @@ export default function SharedHeader() {
               ) : (
                 <Moon size={16} />
               )}
-              {resolvedTheme === "dark" ? "Light mode" : "Dark mode"}
+              {resolvedTheme === "dark" ? t("Light mode") : t("Dark mode")}
             </DropdownMenuItem>
 
             <DropdownMenuSeparator />
@@ -317,9 +322,9 @@ export default function SharedHeader() {
               return (
                 <DropdownMenuItem
                   key={item.href}
-                  onClick={() => router.push(item.href)}
+                  onClick={() => go(item.href)}
                 >
-                  <Icon size={16} /> {item.label}
+                  <Icon size={16} /> {t(item.label)}
                 </DropdownMenuItem>
               );
             })}
@@ -330,14 +335,14 @@ export default function SharedHeader() {
               <DropdownMenuItem
                 className="text-destructive focus:text-destructive"
                 onClick={() => {
-                  void signOut().then(() => router.push("/signin"));
+                  void signOut().then(() => go("/signin"));
                 }}
               >
-                <LogOut size={16} /> Sign out
+                <LogOut size={16} /> {t("Sign out")}
               </DropdownMenuItem>
             ) : (
-              <DropdownMenuItem onClick={() => router.push("/signin")}>
-                <User size={16} /> Sign in
+              <DropdownMenuItem onClick={() => go("/signin")}>
+                <User size={16} /> {t("Sign in")}
               </DropdownMenuItem>
             )}
           </DropdownMenuContent>
@@ -346,12 +351,17 @@ export default function SharedHeader() {
         {notifOpen && (
           <div
             ref={notifPanelRef}
-            className="absolute right-3 top-[72px] z-20 w-[320px] rounded-xl border bg-card p-3 shadow-lg"
+            dir={locale === "ar" ? "rtl" : "ltr"}
+            className={`absolute top-[72px] z-20 w-[min(calc(100vw-1.5rem),360px)] overflow-hidden rounded-xl border bg-card p-3 shadow-lg ${
+              locale === "ar" ? "left-3 right-auto" : "right-3 left-auto"
+            }`}
           >
-            <div className="mb-2 flex items-center justify-between">
-              <p className="text-xl font-semibold">Notifications</p>
-              <label className="flex cursor-pointer select-none items-center gap-2 text-xs text-muted-foreground">
-                Unread only
+            <div className="mb-2 flex min-w-0 items-center justify-between gap-3">
+              <p className="min-w-0 text-xl font-semibold">
+                {t("Notifications")}
+              </p>
+              <label className="flex shrink-0 cursor-pointer select-none items-center gap-2 text-xs text-muted-foreground">
+                {t("Unread only")}
                 <input
                   type="checkbox"
                   checked={unreadOnly}
@@ -367,12 +377,12 @@ export default function SharedHeader() {
               onClick={() => void markAllRead({})}
               disabled={isLoading || !isAuthenticated}
             >
-              Mark all as read
+              {t("Mark all as read")}
             </Button>
             <div className="max-h-56 space-y-2 overflow-auto">
               {visibleNotifications.length === 0 ? (
                 <p className="py-6 text-center text-sm text-muted-foreground">
-                  No New Updates
+                  {t("No New Updates")}
                 </p>
               ) : (
                 visibleNotifications.map((item) => (
@@ -381,9 +391,11 @@ export default function SharedHeader() {
                     key={item._id}
                     variant="ghost"
                     onClick={() => handleNotificationClick(item)}
-                    className={`h-auto w-full justify-start rounded-md border p-2 text-left text-sm hover:bg-muted/40 ${item.read ? "bg-muted/20" : "bg-primary/10"}`}
+                    className={`h-auto w-full min-w-0 items-start justify-start whitespace-normal rounded-md border p-2 text-start text-sm hover:bg-muted/40 ${item.read ? "bg-muted/20" : "bg-primary/10"}`}
                   >
-                    {item.text}
+                    <span className="block min-w-0 whitespace-normal break-words leading-relaxed">
+                      {item.text}
+                    </span>
                   </Button>
                 ))
               )}

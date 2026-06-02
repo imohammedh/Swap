@@ -52,6 +52,12 @@ import { Card, CardContent } from "@/components/ui/card";
 import { categoryNameById, categoryOptions } from "@/lib/categories";
 import HomePageBanner from "@/public/Swap-HomePageBanner.svg";
 import HomePageBannerFeatured from "@/public/Swap-HomePageBannerFeatured.svg";
+import {
+  getCategoryName,
+  localizePath,
+  useLocale,
+  useT,
+} from "@/lib/i18n";
 
 function formatEgp(value: number) {
   return `${new Intl.NumberFormat("en-US").format(value)} EGP`;
@@ -201,6 +207,8 @@ function HorizontalSlider({
   );
 }
 export default function Home() {
+  const locale = useLocale();
+  const t = useT();
   const [searchTerm, setSearchTerm] = useState("");
   const [activeCategory, setActiveCategory] = useState("all");
   const [authPrompt, setAuthPrompt] = useState<string | null>(null);
@@ -249,7 +257,11 @@ export default function Home() {
 
   const redirectToSignIn = (message?: string) => {
     if (message) setAuthPrompt(message);
-    router.push("/signin?next=" + encodeURIComponent(getNextUrl()));
+    router.push(
+      localizePath("/signin", locale) +
+        "?next=" +
+        encodeURIComponent(getNextUrl()),
+    );
   };
 
   const listings =
@@ -277,7 +289,7 @@ export default function Home() {
     const params = new URLSearchParams();
     if (searchTerm.trim()) params.set("q", searchTerm.trim());
     if (activeCategory !== "all") params.set("category", activeCategory);
-    router.push(`/search?${params.toString()}`);
+    router.push(localizePath(`/search?${params.toString()}`, locale));
   };
 
   const handleSwipe = async (direction: "like" | "dislike") => {
@@ -286,8 +298,8 @@ export default function Home() {
     if (!isAuthenticated) {
       redirectToSignIn(
         direction === "like"
-          ? "Sign in to like a product."
-          : "Sign in to dislike a product.",
+          ? t("Sign in to like a product.")
+          : t("Sign in to dislike a product."),
       );
       return;
     }
@@ -298,7 +310,7 @@ export default function Home() {
       setAuthPrompt(null);
     } catch (error) {
       setAuthPrompt(
-        error instanceof Error ? error.message : "Failed to swipe.",
+        error instanceof Error ? error.message : t("Failed to swipe"),
       );
     }
   };
@@ -306,7 +318,9 @@ export default function Home() {
   const handleViewChange = (view: "swap" | "browse") => {
     const params = new URLSearchParams(searchParams.toString());
     params.set("view", view);
-    router.replace(`/?${params.toString()}`, { scroll: false });
+    router.replace(localizePath(`/?${params.toString()}`, locale), {
+      scroll: false,
+    });
   };
 
   const handleCardSwipeEnd = async () => {
@@ -340,10 +354,10 @@ export default function Home() {
     setAuthPrompt(null);
   };
   const swipeEmptyMessage = !isAuthenticated
-    ? "Sign in to start swiping. You can still browse listings."
+    ? t("Sign in to start swiping. You can still browse listings.")
     : onlyMine
-      ? "No other listings yet. Your listings don't appear in the swap deck."
-      : "You're all caught up ? you've swiped everything that matches your filters (your listings are excluded).";
+      ? t("No other listings yet. Your listings don't appear in the swap deck.")
+      : t("You're all caught up - you've swiped everything that matches your filters (your listings are excluded).");
   const scrollCategories = (direction: "left" | "right") => {
     const node = categoryScrollerRef.current;
     if (!node) return;
@@ -366,7 +380,7 @@ export default function Home() {
                 type="button"
                 onClick={() => redirectToSignIn()}
               >
-                Go to sign in
+                {t("Go to sign in")}
               </Button>
             )}
           </CardContent>
@@ -383,18 +397,25 @@ export default function Home() {
             className="object-cover"
             priority
           />
-          <div className="absolute inset-0 bg-linear-to-r from-black/75 via-black/35 to-black/15" />
+          <div
+            className={`absolute inset-0 ${
+              locale === "ar"
+                ? "bg-linear-to-l from-black/75 via-black/35 to-black/15"
+                : "bg-linear-to-r from-black/75 via-black/35 to-black/15"
+            }`}
+          />
           <div className="absolute inset-0 flex items-end justify-between p-4 md:p-6">
             <div>
               <p className="text-xs uppercase tracking-[0.16em] text-white/80">
-                just for you
+                {t("just for you")}
               </p>
               <h2 className="mt-1 text-4xl max-w-lg font-black text-secondary-foreground dark:text-primary md:text-4xl">
-                if you don't want to you don't have to
+                {t("if you don't want to you don't have to")}
               </h2>
               <p className="mt-2 max-w-xl text-sm text-white/85 md:text-base">
-                you don't have to keep swipping move to the browse tap and
-                search for what exactly you want
+                {t(
+                  "you don't have to keep swipping move to the browse tap and search for what exactly you want",
+                )}
               </p>
             </div>
           </div>
@@ -411,7 +432,7 @@ export default function Home() {
                   : "border-transparent bg-background text-foreground hover:bg-muted"
               }`}
             >
-              Swap
+              {t("Swap")}
             </Button>
             <Button
               type="button"
@@ -423,7 +444,7 @@ export default function Home() {
                   : "border-transparent bg-background text-foreground hover:bg-muted"
               }`}
             >
-              Browse
+              {t("Browse")}
             </Button>
           </div>
         </div>
@@ -437,7 +458,7 @@ export default function Home() {
                   <CardContent className="p-4">
                     <div className="mx-auto max-w-2xl">
                       <p className="mb-3 text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-                        Live Swap Deck
+                        {t("Live Swap Deck")}
                       </p>
                       <div className="relative w-full">
                         <div
@@ -453,7 +474,7 @@ export default function Home() {
                             )
                               return;
                             if (!isAuthenticated) {
-                              redirectToSignIn("Sign in to start swiping.");
+                              redirectToSignIn(t("Sign in to start swiping."));
                               return;
                             }
                             event.preventDefault();
@@ -513,7 +534,7 @@ export default function Home() {
                               </p>
                               {me?.id && swipeTarget.ownerId === me.id && (
                                 <p className="mt-1 inline-flex rounded-full bg-amber-400/90 px-2 py-0.5 text-xs font-semibold text-black">
-                                  Your listing
+                                  {t("Your listing")}
                                 </p>
                               )}
                               <p className="mt-2 text-xl font-black">
@@ -531,7 +552,7 @@ export default function Home() {
                                 : "bg-transparent text-transparent"
                             }`}
                           >
-                            LIKE
+                            {t("LIKE")}
                           </div>
                           <div
                             className={`pointer-events-none absolute right-4 top-16 rounded-full px-3 py-1 text-xs font-bold ${
@@ -540,7 +561,7 @@ export default function Home() {
                                 : "bg-transparent text-transparent"
                             }`}
                           >
-                            DISLIKE
+                            {t("DISLIKE")}
                           </div>
                         </div>
                         <div className="pointer-events-none absolute -bottom-3 left-1/2 h-5 w-[92%] -translate-x-1/2 rounded-2xl bg-primary/10" />
@@ -556,13 +577,13 @@ export default function Home() {
                     className="h-14 text-base"
                     onClick={() => void handleSwipe("dislike")}
                   >
-                    <X size={18} /> Dislike
+                    <X size={18} /> {t("Dislike")}
                   </Button>
                   <Button
                     className="h-14 text-base"
                     onClick={() => void handleSwipe("like")}
                   >
-                    <Heart size={18} /> Like
+                    <Heart size={18} /> {t("Like")}
                   </Button>
                 </div>
               </div>
@@ -579,24 +600,25 @@ export default function Home() {
                     variant="outline"
                     onClick={clearSwapFilters}
                   >
-                    Clear filters
+                    {t("Clear filters")}
                   </Button>
                   <Button
                     type="button"
                     variant="outline"
                     onClick={() => handleViewChange("browse")}
                   >
-                    Browse listings
+                    {t("Browse listings")}
                   </Button>
                 </div>
               )}
               {hasFilters && (
                 <p className="mt-3 text-xs text-muted-foreground">
-                  Active filters:{" "}
+                  {t("Active filters")}:{" "}
                   {activeCategory !== "all"
-                    ? categoryNameById(activeCategory)
-                    : "All"}
-                  {searchTerm.trim() ? ` ? ?${searchTerm.trim()}?` : ""}
+                    ? (getCategoryName(activeCategory, locale) ??
+                      categoryNameById(activeCategory))
+                    : t("All")}
+                  {searchTerm.trim() ? ` - "${searchTerm.trim()}"` : ""}
                 </p>
               )}
             </section>
@@ -670,7 +692,10 @@ export default function Home() {
                             className=" text-primary-foreground"
                           />
                         </span>
-                        <p>{category.name}</p>
+                        <p>
+                          {getCategoryName(category.id, locale) ??
+                            category.name}
+                        </p>
                       </Button>
                     );
                   })}
@@ -689,19 +714,25 @@ export default function Home() {
                 className="object-cover"
                 priority
               />
-              <div className="absolute inset-0 bg-linear-to-r from-black/75 via-black/35 to-black/15" />
+              <div
+                className={`absolute inset-0 ${
+                  locale === "ar"
+                    ? "bg-linear-to-l from-black/75 via-black/35 to-black/15"
+                    : "bg-linear-to-r from-black/75 via-black/35 to-black/15"
+                }`}
+              />
               <div className="absolute inset-0 flex items-end justify-between p-4 md:p-6">
                 <div>
                   <p className="text-xs uppercase tracking-[0.16em] text-white/80">
-                    Featured Deal
+                    {t("Featured Deal")}
                   </p>
                   <h2 className="mt-1 text-4xl font-black text-secondary-foreground dark:text-primary md:text-4xl">
-                    we're just launched{" "}
+                    {t("we're just launched")}{" "}
                   </h2>
                   <p className="mt-2 max-w-xl text-sm text-white/85 md:text-base">
-                    so we may not have too many deals right now but you can go a
-                    head and start your own listing and show people what you
-                    have to offer
+                    {t(
+                      "so we may not have too many deals right now but you can go a head and start your own listing and show people what you have to offer",
+                    )}
                   </p>
                 </div>
               </div>
@@ -710,14 +741,16 @@ export default function Home() {
 
           <section className="space-y-3">
             <div className="flex items-center justify-between">
-              <h3 className="text-xl font-semibold">Featured</h3>
-              <Badge variant="outline">{featured.length} items</Badge>
+              <h3 className="text-xl font-semibold">{t("Featured")}</h3>
+              <Badge variant="outline">
+                {featured.length} {t("items")}
+              </Badge>
             </div>
             <HorizontalSlider>
               {featured.map((product) => (
                 <Link
                   key={product._id}
-                  href={`/products/${product.slug}`}
+                  href={localizePath(`/products/${product.slug}`, locale)}
                   data-slider-item="true"
                   className="block w-65 shrink-0 snap-start lg:w-[320px]"
                 >
@@ -756,16 +789,19 @@ export default function Home() {
             <div className="flex items-center justify-between">
               <h3 className="text-xl font-semibold">
                 {activeCategory === "all"
-                  ? "More For You"
-                  : categoryNameById(activeCategory)}
+                  ? t("More For You")
+                  : (getCategoryName(activeCategory, locale) ??
+                    categoryNameById(activeCategory))}
               </h3>
-              <Badge variant="outline">{listings.length} items</Badge>
+              <Badge variant="outline">
+                {listings.length} {t("items")}
+              </Badge>
             </div>
 
             {listings.length === 0 ? (
               <Card>
                 <CardContent className="p-8 text-center text-muted-foreground">
-                  No listings match your search.
+                  {t("No listings match your search.")}
                 </CardContent>
               </Card>
             ) : (
@@ -773,7 +809,7 @@ export default function Home() {
                 {listings.map((product) => (
                   <Link
                     key={product._id}
-                    href={`/products/${product.slug}`}
+                    href={localizePath(`/products/${product.slug}`, locale)}
                     data-slider-item="true"
                     className="block w-[260px] shrink-0 snap-start sm:w-[300px] lg:w-[320px]"
                   >
