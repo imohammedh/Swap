@@ -148,7 +148,7 @@ export default function AppFooter() {
               </SelectTrigger>
               <SelectContent align="end">
                 <SelectItem value="en">English</SelectItem>
-                <SelectItem value="ar">العربية</SelectItem>
+                <SelectItem value="ar">العربية (السعودية)</SelectItem>
               </SelectContent>
             </Select>
           </div>

@@ -11,7 +11,7 @@ export default function LocaleDocumentSync() {
     const root = document.documentElement;
     const isArabic = locale === "ar";
 
-    root.lang = locale;
+    root.lang = isArabic ? "ar-SA" : "en";
     root.dir = isArabic ? "rtl" : "ltr";
     root.classList.toggle("locale-ar", isArabic);
   }, [locale]);
